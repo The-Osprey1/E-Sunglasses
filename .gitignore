@@ -1,0 +1,11 @@
+# CircuitPython firmware and libraries are downloaded, not stored here
+*.uf2
+firmware/**/lib/
+
+# Slicer and CAD scratch
+*.gcode
+*.3mf.bak
+*~
+.DS_Store
+Thumbs.db
+__pycache__/
