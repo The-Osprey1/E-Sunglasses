@@ -68,9 +68,9 @@
       and tells you when to move things. Your only job is to hold the sensor and turn the samples.</p>
     <h2>Before you start</h2>
     <ol>
-      <li>Roll a short tube (about 2 cm) of black paper around the light sensor chip, so it only sees light coming straight from the screen.</li>
+      <li>Turn the room lights off, so the screen is the only light. (Optional: a short ring of dark paper taped around the sensor chip blocks stray light even better.)</li>
       <li>Draw a small straight line with a marker (or stick a strip of tape) along one edge of the sunglasses lens and of the peeled cell. This is the "mark" you will point at each angle.</li>
-      <li>Turn the room lights down and set the screen brightness to about three quarters.</li>
+      <li>Set the screen brightness to about three quarters.</li>
       <li>Make this browser window full screen with <kbd>F11</kbd>.</li>
     </ol>
     <h2>What to test</h2>
@@ -325,10 +325,10 @@ const readings = [];   // {name, angle, pct}
 let readyS = 15, angleS = 6;
 
 async function darkStep() {
-  say("Step: dark reading", "Cover the open end of the tube completely",
+  say("Step: dark reading", "Cover the sensor chip completely",
     "Press your fingertip firmly over it so no light gets in.");
   await countdown(readyS);
-  say(null, "Hold still: reading", "Keep the tube covered.");
+  say(null, "Hold still: reading", "Keep it covered.");
   await command("d");
   const m = await waitFor(/dark = (\d+) counts/, 8000);
   await waitFor(PROMPT, 3000);
@@ -338,7 +338,7 @@ async function darkStep() {
 
 async function referenceStep(color) {
   while (true) {
-    say(`Step: ${color} reference`, "Take any sample away. Hold the tube flat on the dashed circle",
+    say(`Step: ${color} reference`, "Take any sample away. Hold the sensor flat on the dashed circle, chip facing the screen",
       "Nothing between the sensor and the screen. This reading counts as 100%.");
     targetAngle = null; drawDial();
     await countdown(readyS);
@@ -368,7 +368,7 @@ async function referenceStep(color) {
 async function sweepStep(name, sample, color) {
   targetAngle = 0; drawDial();
   say(`Step: ${sample}, ${color} screen`,
-    `Hold the ${sample} flat over the circle and press the tube on top`,
+    `Hold the ${sample} flat over the circle and press the sensor on top`,
     `Point its mark at 0°. You'll turn it 15° at a time. Press "Skip this sample" if you don't have it.`);
   if (await countdown(readyS, { skippable: true }) === "skip") { targetAngle = null; drawDial(); return; }
   await command("s " + name);
@@ -378,7 +378,7 @@ async function sweepStep(name, sample, color) {
     const angle = Number(m[1]);
     targetAngle = angle; drawDial();
     if (angle > 0) {
-      say(null, `Turn the mark to ${angle}°`, `Keep the tube pressed flat. Reading in a moment.`);
+      say(null, `Turn the mark to ${angle}°`, `Keep the sensor pressed flat. Reading in a moment.`);
       if (await countdown(angleS, { skippable: true }) === "skip") {
         await send("q\r");
         await waitFor(PROMPT, 5000);
