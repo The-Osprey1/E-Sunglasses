@@ -19,6 +19,15 @@ sunglasses lens) at each angle, as a percent of the light with nothing in the wa
 5. Open a serial console (Mu or Thonny work, or any terminal at 115200 baud) and press
    Enter. You should see `Bench test 1` and a `>` prompt.
 
+## Test runner page (no console app needed)
+
+`Bench test runner.html` runs the whole test from Chrome or Edge, with no serial console
+to install. Open it in Chrome or Edge, click **Connect to board**, then **Start test**. It
+restarts `code.py`, sends every command, switches the screen between white, red and blue,
+draws an angle dial around the sensor spot, and beeps and shows what to do at each step.
+At the end it shows pass or fail for each sweep (including the cell-versus-sunglasses
+check) and has a **Copy results** button for the CSV.
+
 ## Running the test
 
 | Type | Does |

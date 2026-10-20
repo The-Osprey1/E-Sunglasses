@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bench Test 1 Runner</title>
+<style>
+  :root {
+    --bar: #1d1f23; --bar2: #26292f; --text: #f2f2f2; --muted: #a9adb4;
+    --accent: #4c9aff; --warn: #ffb020; --bad: #ff6b6b; --good: #3ccf7a;
+  }
+  html, body { margin: 0; height: 100%; background: #000; color: var(--text);
+    font-family: "Segoe UI", system-ui, sans-serif; }
+  body { display: flex; flex-direction: column; }
+  #top { background: var(--bar); padding: 10px 18px; min-height: 104px; box-sizing: border-box; }
+  #count { float: right; font-size: 44px; font-weight: 700; color: var(--accent); min-width: 80px; text-align: right; }
+  #stepline { font-size: 14px; color: var(--muted); }
+  #msg { font-size: 30px; font-weight: 600; line-height: 1.2; }
+  #sub { font-size: 17px; color: var(--muted); margin-top: 4px; }
+  #panel { flex: 1; position: relative; background: #fff; overflow: hidden; }
+  #dial { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #bottom { background: var(--bar); padding: 8px 18px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  #bottom .grow { flex: 1; }
+  #log { background: #0d0e10; color: #cfd3d8; font: 12px/1.35 Consolas, monospace; height: 110px;
+    overflow-y: auto; white-space: pre-wrap; padding: 6px 18px; margin: 0; }
+  button { font: inherit; font-size: 15px; padding: 8px 14px; border-radius: 6px; border: 1px solid #50545c;
+    background: var(--bar2); color: var(--text); cursor: pointer; }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:disabled { opacity: .45; cursor: default; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #05101f; font-weight: 600; }
+  input[type=number], input[type=text] { font: inherit; font-size: 15px; background: #0d0e10; color: var(--text);
+    border: 1px solid #50545c; border-radius: 6px; padding: 6px 8px; }
+  input[type=number] { width: 60px; }
+  .overlay { position: absolute; inset: 0; background: rgba(16,17,20,.96); overflow-y: auto; padding: 24px 32px; box-sizing: border-box; }
+  .overlay h1 { margin: 0 0 8px; font-size: 26px; }
+  .overlay h2 { font-size: 18px; margin: 20px 0 6px; }
+  .overlay p, .overlay li { font-size: 16px; line-height: 1.45; color: #dfe2e6; }
+  .overlay ol { padding-left: 22px; }
+  .opts { display: flex; gap: 28px; flex-wrap: wrap; margin: 8px 0 16px; font-size: 16px; }
+  .opts label { display: block; margin: 4px 0; }
+  .warnbox { border-left: 4px solid var(--warn); padding: 6px 12px; background: #2a2416; }
+  .errbox { border-left: 4px solid var(--bad); padding: 6px 12px; background: #2c1a1a; white-space: pre-wrap; font-family: Consolas, monospace; font-size: 13px; }
+  table { border-collapse: collapse; font-size: 15px; margin: 6px 0; }
+  th, td { border-bottom: 1px solid #3a3d44; padding: 5px 12px; text-align: left; }
+  th { color: var(--muted); font-weight: 600; }
+  .pass { color: var(--good); font-weight: 700; }
+  .fail { color: var(--bad); font-weight: 700; }
+  textarea { width: 100%; height: 160px; background: #0d0e10; color: #cfd3d8; border: 1px solid #50545c;
+    border-radius: 6px; font: 12px Consolas, monospace; box-sizing: border-box; }
+  .hidden { display: none !important; }
+  kbd { background: #33363c; border-radius: 4px; padding: 1px 6px; font-size: 14px; }
+</style>
+</head>
+<body>
+<div id="top">
+  <div id="count"></div>
+  <div id="stepline">Bench test 1: glare-cut with no power</div>
+  <div id="msg">Connect the board to begin</div>
+  <div id="sub">Plug in the QT Py, then press Connect below.</div>
+</div>
+
+<div id="panel">
+  <svg id="dial" aria-hidden="true"></svg>
+
+  <div id="setup" class="overlay">
+    <h1>Bench test 1</h1>
+    <p>This page runs the whole test for you. It changes the screen color, sends the commands to the board,
+      and tells you when to move things. Your only job is to hold the sensor and turn the samples.</p>
+    <h2>Before you start</h2>
+    <ol>
+      <li>Roll a short tube (about 2 cm) of black paper around the light sensor chip, so it only sees light coming straight from the screen.</li>
+      <li>Draw a small straight line with a marker (or stick a strip of tape) along one edge of the sunglasses lens and of the peeled cell. This is the "mark" you will point at each angle.</li>
+      <li>Turn the room lights down and set the screen brightness to about three quarters.</li>
+      <li>Make this browser window full screen with <kbd>F11</kbd>.</li>
+    </ol>
+    <h2>What to test</h2>
+    <div class="opts">
+      <div>
+        <label><input type="checkbox" id="useSun" checked> Sunglasses lens</label>
+        <label><input type="checkbox" id="useCell" checked> Peeled liquid crystal cell</label>
+      </div>
+      <div>
+        <label><input type="checkbox" id="useWhite" checked> White screen</label>
+        <label><input type="checkbox" id="useRed" checked> Red screen</label>
+        <label><input type="checkbox" id="useBlue" checked> Blue screen</label>
+      </div>
+      <div>
+        <label>Seconds to get ready <input type="number" id="readySec" value="15" min="3" max="120"></label>
+        <label>Seconds per angle <input type="number" id="angleSec" value="6" min="2" max="60"></label>
+      </div>
+    </div>
+    <p class="muted" style="color:var(--muted)">During the test: <kbd>Space</kbd> skips the wait, <kbd>P</kbd> pauses, <kbd>Esc</kbd> stops.</p>
+    <div id="setupErr"></div>
+    <p>
+      <button class="primary" id="btnConnect">Connect to board</button>
+      <button id="btnConnectAll" title="Use this if the board is not in the list">Board not listed? Show every port</button>
+      <button class="primary" id="btnStart" disabled>Start test</button>
+    </p>
+  </div>
+
+  <div id="results" class="overlay hidden">
+    <h1>Results</h1>
+    <div id="resultBody"></div>
+    <h2>Readings (CSV)</h2>
+    <textarea id="csvOut" readonly></textarea>
+    <p>
+      <button class="primary" id="btnCopy">Copy results</button>
+      <button id="btnSave">Save CSV file</button>
+      <button id="btnAgain">Run again</button>
+      <span id="copyNote" style="color:var(--muted)"></span>
+    </p>
+    <p style="color:var(--muted)">Paste the copied results into the project thread so Claude can check them against the design criteria.</p>
+  </div>
+</div>
+
+<div id="bottom">
+  <button id="btnGo" disabled>Go now (Space)</button>
+  <button id="btnPause" disabled>Pause (P)</button>
+  <button id="btnSkip" disabled>Skip this sample</button>
+  <button id="btnStop" disabled>Stop (Esc)</button>
+  <span class="grow"></span>
+  <input type="text" id="manual" placeholder="Type a command for the board" size="28">
+  <button id="btnSend" disabled>Send</button>
+  <button id="btnLog">Hide log</button>
+</div>
+<pre id="log"></pre>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const COLORS = { white: "#ffffff", red: "#ff0000", blue: "#0000ff" };
+const ADAFRUIT_USB_VENDOR = 0x239A;
+
+let port = null, reader = null, writer = null;
+let buf = "", cursor = 0, connected = false, running = false;
+let paused = false, aborted = false, goFlag = false, skipFlag = false, skipAllowed = false;
+let targetAngle = null, bgColor = "white", audio = null;
+
+class Abort extends Error {}
+
+// ---------- display ----------
+function say(step, msg, sub) {
+  if (step !== null) $("stepline").textContent = step;
+  $("msg").textContent = msg;
+  $("sub").textContent = sub || "";
+}
+function setCount(t) { $("count").textContent = t; }
+function setColor(name) { bgColor = name; $("panel").style.background = COLORS[name]; drawDial(); }
+function logText(s) {
+  const el = $("log");
+  el.textContent = (el.textContent + s.replace(/\r/g, "")).slice(-60000);
+  el.scrollTop = el.scrollHeight;
+}
+
+function drawDial() {
+  const svg = $("dial"), r = svg.getBoundingClientRect();
+  const w = r.width, h = r.height, cx = w / 2, cy = h / 2;
+  const R = Math.max(80, Math.min(w, h) * 0.38), inner = 46;
+  const ink = bgColor === "blue" ? "#ffffff" : "#000000";
+  const faint = bgColor === "blue" ? "rgba(255,255,255,.55)" : "rgba(0,0,0,.45)";
+  let s = "";
+  s += `<circle cx="${cx}" cy="${cy}" r="${inner}" fill="none" stroke="${faint}" stroke-width="2" stroke-dasharray="6 6"/>`;
+  s += `<text x="${cx}" y="${cy + inner + 22}" fill="${faint}" font-size="14" text-anchor="middle">sensor here</text>`;
+  for (let a = 0; a < 360; a += 15) {
+    const rad = a * Math.PI / 180, cos = Math.cos(rad), sin = -Math.sin(rad);
+    const isTarget = targetAngle !== null && (a === targetAngle || a === targetAngle + 180);
+    const len = isTarget ? 44 : (a % 45 === 0 ? 24 : 14);
+    const x1 = cx + cos * (R - len), y1 = cy + sin * (R - len), x2 = cx + cos * R, y2 = cy + sin * R;
+    s += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${isTarget ? ink : faint}" stroke-width="${isTarget ? 7 : 2}" stroke-linecap="round"/>`;
+    if (a <= 180) {
+      const lx = cx + cos * (R + 24), ly = cy + sin * (R + 24) + 6;
+      s += `<text x="${lx}" y="${ly}" fill="${isTarget ? ink : faint}" font-size="${isTarget ? 24 : 15}" font-weight="${isTarget ? 700 : 400}" text-anchor="middle">${a}°</text>`;
+    }
+  }
+  if (targetAngle !== null) {
+    // Guide line through the center, so the sample's mark can be lined up with it.
+    const rad = targetAngle * Math.PI / 180, cos = Math.cos(rad), sin = -Math.sin(rad);
+    s += `<line x1="${cx - cos * (R - 50)}" y1="${cy - sin * (R - 50)}" x2="${cx - cos * (inner + 16)}" y2="${cy - sin * (inner + 16)}" stroke="${faint}" stroke-width="2"/>`;
+    s += `<line x1="${cx + cos * (inner + 16)}" y1="${cy + sin * (inner + 16)}" x2="${cx + cos * (R - 50)}" y2="${cy + sin * (R - 50)}" stroke="${faint}" stroke-width="2"/>`;
+  }
+  svg.innerHTML = s;
+}
+window.addEventListener("resize", drawDial);
+
+// ---------- sound ----------
+function beep(freq, ms) {
+  try {
+    if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.frequency.value = freq; o.connect(g); g.connect(audio.destination);
+    g.gain.setValueAtTime(0.2, audio.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + ms / 1000);
+    o.start(); o.stop(audio.currentTime + ms / 1000);
+  } catch (e) { /* sound is optional */ }
+}
+
+// ---------- serial ----------
+async function connect(useFilter) {
+  $("setupErr").innerHTML = "";
+  if (!("serial" in navigator)) {
+    showSetupError("This browser can't talk to the board. Open this file in Google Chrome or Microsoft Edge.");
+    return;
+  }
+  try {
+    port = await navigator.serial.requestPort(useFilter ? { filters: [{ usbVendorId: ADAFRUIT_USB_VENDOR }] } : {});
+    await port.open({ baudRate: 115200 });
+  } catch (e) {
+    if (e.name !== "NotFoundError") showSetupError("Could not open the board: " + e.message +
+      "\nIf another program (Thonny, Mu, a serial monitor) has it open, close that program and try again.");
+    return;
+  }
+  const dec = new TextDecoderStream();
+  port.readable.pipeTo(dec.writable).catch(() => {});
+  reader = dec.readable.getReader();
+  const enc = new TextEncoderStream();
+  enc.readable.pipeTo(port.writable).catch(() => {});
+  writer = enc.writable.getWriter();
+  connected = true;
+  readLoop();
+  $("btnConnect").textContent = "Connected";
+  $("btnConnect").disabled = $("btnConnectAll").disabled = true;
+  $("btnStart").disabled = false;
+  $("btnSend").disabled = false;
+  say(null, "Board connected", "Read the steps, then press Start test.");
+}
+
+async function readLoop() {
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += value;
+      logText(value);
+    }
+  } catch (e) { /* port closed or unplugged */ }
+  connected = false;
+  say(null, "The board disconnected", "Plug it back in and reload this page.");
+}
+
+async function send(s) {
+  if (!connected) throw new Error("The board is not connected.");
+  await writer.write(s);
+}
+
+async function command(line) {
+  cursor = buf.length;
+  await send(line + "\r");
+}
+
+function waitFor(re, ms, ignoreErrors) {
+  return new Promise((resolve, reject) => {
+    const t0 = performance.now();
+    const iv = setInterval(() => {
+      const rest = buf.slice(cursor);
+      const m = rest.match(re);
+      if (m) {
+        clearInterval(iv);
+        cursor += m.index + m[0].length;
+        resolve(m);
+      } else if (aborted) {
+        clearInterval(iv); reject(new Abort());
+      } else if (!ignoreErrors && rest.includes("Traceback")) {
+        clearInterval(iv);
+        setTimeout(() => reject(new Error("The board reported an error:\n" + buf.slice(cursor).slice(rest.indexOf("Traceback")))), 600);
+      } else if (!connected) {
+        clearInterval(iv); reject(new Error("The board disconnected."));
+      } else if (performance.now() - t0 > ms) {
+        clearInterval(iv); reject(new Error("The board did not answer in time."));
+      }
+    }, 40);
+  });
+}
+
+const PROMPT = /\n> $/;
+
+async function restartProgram() {
+  say("Starting", "Restarting the test program on the board", "This clears any old readings.");
+  cursor = buf.length;
+  await send("\x03");          // stop the program (prints a harmless KeyboardInterrupt)
+  await sleep(500);
+  await send("\x04");          // reload code.py
+  try {
+    await waitFor(/soft reboot/i, 8000, true);
+    await waitFor(/Bench test 1: glare-cut/, 12000);
+    await waitFor(PROMPT, 5000);
+  } catch (e) {
+    if (e instanceof Abort || /error/.test(e.message)) throw e;
+    // The program may already be sitting at its prompt; poke it once.
+    await command("h");
+    await waitFor(PROMPT, 4000);
+  }
+}
+
+// ---------- timing helpers ----------
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function countdown(secs, opts) {
+  opts = opts || {};
+  goFlag = skipFlag = false;
+  skipAllowed = !!opts.skippable;
+  $("btnSkip").disabled = !skipAllowed;
+  $("btnGo").disabled = false;
+  let left = secs * 1000, lastShown = null;
+  while (left > 0) {
+    if (aborted) throw new Abort();
+    if (skipAllowed && skipFlag) return "skip";
+    if (goFlag) break;
+    await sleep(100);
+    if (!paused) left -= 100;
+    const shown = paused ? "paused" : String(Math.ceil(left / 1000));
+    if (shown !== lastShown) {
+      setCount(shown);
+      if (!paused && left > 0 && left <= 3000 && opts.tick !== false) beep(660, 80);
+      lastShown = shown;
+    }
+  }
+  setCount("");
+  $("btnGo").disabled = true;
+  $("btnSkip").disabled = true;
+  return "go";
+}
+
+// ---------- test steps ----------
+const readings = [];   // {name, angle, pct}
+let readyS = 15, angleS = 6;
+
+async function darkStep() {
+  say("Step: dark reading", "Cover the open end of the tube completely",
+    "Press your fingertip firmly over it so no light gets in.");
+  await countdown(readyS);
+  say(null, "Hold still: reading", "Keep the tube covered.");
+  await command("d");
+  const m = await waitFor(/dark = (\d+) counts/, 8000);
+  await waitFor(PROMPT, 3000);
+  beep(1200, 120);
+  logText(`\n[runner] dark = ${m[1]}\n`);
+}
+
+async function referenceStep(color) {
+  while (true) {
+    say(`Step: ${color} reference`, "Take any sample away. Hold the tube flat on the dashed circle",
+      "Nothing between the sensor and the screen. This reading counts as 100%.");
+    targetAngle = null; drawDial();
+    await countdown(readyS);
+    say(null, "Hold still: reading", "");
+    const segStart = buf.length;
+    await command("r");
+    await waitFor(/reference = (\d+) counts/, 8000);
+    await waitFor(PROMPT, 3000);
+    const seg = buf.slice(segStart);
+    beep(1200, 120);
+    if (/saturated/.test(seg)) {
+      say(null, "Too bright for the sensor", "Lower the screen brightness by a few steps. The reference will be taken again.");
+      beep(300, 400);
+      await countdown(Math.max(readyS, 10), { tick: false });
+      continue;
+    }
+    if (/weak/.test(seg)) {
+      say(null, "Too little light", "Turn the screen brightness up and the room lights down. The reference will be taken again.");
+      beep(300, 400);
+      await countdown(Math.max(readyS, 10), { tick: false });
+      continue;
+    }
+    return;
+  }
+}
+
+async function sweepStep(name, sample, color) {
+  targetAngle = 0; drawDial();
+  say(`Step: ${sample}, ${color} screen`,
+    `Hold the ${sample} flat over the circle and press the tube on top`,
+    `Point its mark at 0°. You'll turn it 15° at a time. Press "Skip this sample" if you don't have it.`);
+  if (await countdown(readyS, { skippable: true }) === "skip") { targetAngle = null; drawDial(); return; }
+  await command("s " + name);
+  while (true) {
+    const m = await waitFor(/(\d+) deg > $|\n> $/, 8000);
+    if (!m[1]) break;                       // back at the main prompt: sweep finished
+    const angle = Number(m[1]);
+    targetAngle = angle; drawDial();
+    if (angle > 0) {
+      say(null, `Turn the mark to ${angle}°`, `Keep the tube pressed flat. Reading in a moment.`);
+      if (await countdown(angleS, { skippable: true }) === "skip") {
+        await send("q\r");
+        await waitFor(PROMPT, 5000);
+        break;
+      }
+    }
+    say(null, `Hold still at ${angle}°: reading`, "");
+    beep(1000, 120);
+    await send("\r");
+    const r = await waitFor(/(\d+) deg\s+(-?[\d.]+) %/, 8000);
+    readings.push({ name, angle: Number(r[1]), pct: Number(r[2]) });
+    setCount(Number(r[2]).toFixed(1) + "%");
+    beep(1400, 60); await sleep(90); beep(1400, 60);
+  }
+  targetAngle = null; drawDial();
+}
+
+async function runTest() {
+  readyS = Math.max(3, Number($("readySec").value) || 15);
+  angleS = Math.max(2, Number($("angleSec").value) || 6);
+  const samples = [];
+  if ($("useSun").checked) samples.push(["sun", "sunglasses lens"]);
+  if ($("useCell").checked) samples.push(["cell", "peeled cell (peeled side toward the screen)"]);
+  const colors = ["white", "red", "blue"].filter(c => $("use" + c[0].toUpperCase() + c.slice(1)).checked);
+  if (!samples.length || !colors.length) { showSetupError("Pick at least one sample and one screen color."); return; }
+
+  running = true; aborted = false; paused = false; readings.length = 0;
+  $("setup").classList.add("hidden");
+  $("results").classList.add("hidden");
+  $("btnPause").disabled = $("btnStop").disabled = false;
+  try {
+    setColor("white");
+    await restartProgram();
+    await darkStep();
+    for (const color of colors) {
+      setColor(color);
+      await referenceStep(color);
+      for (const [prefix, label] of samples) await sweepStep(`${prefix}-${color}`, label, color);
+    }
+    say("Finishing", "Collecting the results", "");
+    await command("t"); await waitFor(PROMPT, 5000);
+    const csvStart = buf.length;
+    await command("c"); await waitFor(PROMPT, 5000);
+    const raw = buf.slice(csvStart).replace(/\r/g, "");
+    const csvText = raw.slice(raw.indexOf("sweep,angle_deg,percent")).replace(/\n> $/, "").trim();
+    showResults(csvText);
+    beep(880, 150); await sleep(170); beep(1320, 250);
+  } catch (e) {
+    if (e instanceof Abort) {
+      say(null, "Test stopped", "Press Run again to start over.");
+      showResults(null);
+    } else {
+      say(null, "Something went wrong", e.message.split("\n")[0]);
+      showSetupError(e.message);
+      $("setup").classList.remove("hidden");
+    }
+  } finally {
+    running = false; targetAngle = null; setCount(""); setColor("white");
+    ["btnGo", "btnPause", "btnSkip", "btnStop"].forEach(id => $(id).disabled = true);
+  }
+}
+
+// ---------- results ----------
+function analyse(rows) {
+  const bySweep = {};
+  rows.forEach(r => (bySweep[r.name] = bySweep[r.name] || []).push(r));
+  const out = [];
+  for (const [name, pts] of Object.entries(bySweep)) {
+    const lo = pts.reduce((a, b) => (b.pct < a.pct ? b : a));
+    const hi = pts.reduce((a, b) => (b.pct > a.pct ? b : a));
+    const lowLimit = name.includes("white") ? 5 : 10;
+    out.push({ name, lo, hi, lowLimit, loOk: lo.pct <= lowLimit, hiOk: hi.pct >= 70, full: pts.length === 13 });
+  }
+  return out;
+}
+
+function showResults(csvText) {
+  let rows = readings.slice();
+  if (csvText) {
+    rows = csvText.split("\n").slice(1).map(l => l.split(",")).filter(p => p.length === 3)
+      .map(([name, a, p]) => ({ name, angle: Number(a), pct: Number(p) }));
+  }
+  const csv = csvText || ("sweep,angle_deg,percent\n" + rows.map(r => `${r.name},${r.angle},${r.pct.toFixed(2)}`).join("\n"));
+  $("csvOut").value = csv;
+  const res = analyse(rows);
+  const tag = ok => `<span class="${ok ? "pass" : "fail"}">${ok ? "PASS" : "FAIL"}</span>`;
+  let html = "";
+  if (!rows.length) html = "<p>No readings were taken.</p>";
+  else {
+    html += "<table><tr><th>Sweep</th><th>Lowest (glare through)</th><th>Highest (scene light)</th><th>Contrast</th></tr>";
+    for (const r of res) {
+      html += `<tr><td>${r.name}${r.full ? "" : " (partial)"}</td>` +
+        `<td>${r.lo.pct.toFixed(1)}% at ${r.lo.angle}° · limit ${r.lowLimit}% ${tag(r.loOk)}</td>` +
+        `<td>${r.hi.pct.toFixed(1)}% at ${r.hi.angle}° · limit 70% ${tag(r.hiOk)}</td>` +
+        `<td>${r.lo.pct > 0 ? Math.round(r.hi.pct / r.lo.pct) + " : 1" : "–"}</td></tr>`;
+    }
+    html += "</table>";
+    const comp = [];
+    for (const c of ["white", "red", "blue"]) {
+      const s = res.find(r => r.name === "sun-" + c), cell = res.find(r => r.name === "cell-" + c);
+      if (s && cell) {
+        const diff = cell.lo.pct - s.lo.pct;
+        comp.push(`<tr><td>${c}</td><td>${diff >= 0 ? diff.toFixed(1) + " points worse" : (-diff).toFixed(1) + " points better"} · limit 2 points ${tag(diff <= 2)}</td></tr>`);
+      }
+    }
+    if (comp.length) html += "<h2>Cell compared with the sunglasses</h2><table><tr><th>Screen</th><th>Cell's lowest reading</th></tr>" + comp.join("") + "</table>";
+  }
+  $("resultBody").innerHTML = html;
+  $("results").classList.remove("hidden");
+}
+
+async function copyResults() {
+  const text = $("csvOut").value;
+  try { await navigator.clipboard.writeText(text); }
+  catch (e) { $("csvOut").select(); document.execCommand("copy"); }
+  $("copyNote").textContent = "Copied.";
+}
+
+function saveCsv() {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([$("csvOut").value], { type: "text/csv" }));
+  a.download = "bench-test-1-results.csv";
+  a.click();
+}
+
+function showSetupError(text) {
+  $("setupErr").innerHTML = "";
+  const d = document.createElement("div"); d.className = "errbox"; d.textContent = text;
+  $("setupErr").appendChild(d);
+}
+
+// ---------- controls ----------
+$("btnConnect").onclick = () => connect(true);
+$("btnConnectAll").onclick = () => connect(false);
+$("btnStart").onclick = () => { if (running) return; document.activeElement.blur(); beep(880, 60); runTest(); };
+$("btnGo").onclick = () => { goFlag = true; };
+$("btnPause").onclick = togglePause;
+$("btnSkip").onclick = () => { skipFlag = true; };
+$("btnStop").onclick = () => { aborted = true; };
+$("btnCopy").onclick = copyResults;
+$("btnSave").onclick = saveCsv;
+$("btnAgain").onclick = () => { $("results").classList.add("hidden"); $("setup").classList.remove("hidden"); };
+$("btnLog").onclick = () => { const h = $("log").classList.toggle("hidden"); $("btnLog").textContent = h ? "Show log" : "Hide log"; drawDial(); };
+$("btnSend").onclick = sendManual;
+$("manual").addEventListener("keydown", e => { if (e.key === "Enter") sendManual(); e.stopPropagation(); });
+
+async function sendManual() {
+  const v = $("manual").value;
+  if (!connected || running) return;
+  $("manual").value = "";
+  await send(v + "\r");
+}
+
+function togglePause() {
+  paused = !paused;
+  $("btnPause").textContent = paused ? "Resume (P)" : "Pause (P)";
+}
+
+document.addEventListener("keydown", e => {
+  if (!running) return;
+  if (e.code === "Space") { e.preventDefault(); goFlag = true; }
+  else if (e.key === "p" || e.key === "P") togglePause();
+  else if (e.key === "Escape") aborted = true;
+});
+
+setColor("white");
+</script>
+</body>
+</html>
