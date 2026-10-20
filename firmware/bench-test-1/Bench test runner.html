@@ -12,16 +12,27 @@
   html, body { margin: 0; height: 100%; background: #000; color: var(--text);
     font-family: "Segoe UI", system-ui, sans-serif; }
   body { display: flex; flex-direction: column; }
-  #top { background: var(--bar); padding: 10px 18px; min-height: 104px; box-sizing: border-box; }
-  #count { float: right; font-size: 44px; font-weight: 700; color: var(--accent); min-width: 80px; text-align: right; }
+  #top { background: var(--bar); padding: 10px 18px; min-height: 128px; box-sizing: border-box; display: flex; gap: 18px; }
+  #topText { flex: 1; min-width: 0; }
   #stepline { font-size: 14px; color: var(--muted); }
   #msg { font-size: 30px; font-weight: 600; line-height: 1.2; }
-  #sub { font-size: 17px; color: var(--muted); margin-top: 4px; }
+  #sub { font-size: 18px; color: #dfe2e6; margin-top: 4px; }
+  #why { font-size: 15px; color: var(--muted); margin-top: 4px; font-style: italic; }
+  #spark { display: flex; align-items: flex-end; gap: 3px; height: 70px; }
+  #spark .bar { width: 9px; background: var(--accent); border-radius: 2px 2px 0 0; min-height: 2px; }
+  #spark .empty { width: 9px; height: 2px; background: #3a3d44; }
+  #sparkWrap { display: flex; flex-direction: column; align-items: center; align-self: center; color: var(--muted); font-size: 12px; }
+  #countWrap { text-align: right; min-width: 120px; align-self: center; }
+  #count { font-size: 44px; font-weight: 700; color: var(--accent); line-height: 1; }
+  #countLabel { font-size: 13px; color: var(--muted); }
   #panel { flex: 1; position: relative; background: #fff; overflow: hidden; }
   #dial { position: absolute; inset: 0; width: 100%; height: 100%; }
   #bottom { background: var(--bar); padding: 8px 18px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   #bottom .grow { flex: 1; }
-  #log { background: #0d0e10; color: #cfd3d8; font: 12px/1.35 Consolas, monospace; height: 110px;
+  #legend { color: var(--muted); font-size: 14px; }
+  #logArea { background: #0d0e10; }
+  #logHead { display: flex; gap: 8px; align-items: center; padding: 6px 18px 0; color: var(--muted); font-size: 13px; }
+  #log { color: #cfd3d8; font: 12px/1.35 Consolas, monospace; height: 110px;
     overflow-y: auto; white-space: pre-wrap; padding: 6px 18px; margin: 0; }
   button { font: inherit; font-size: 15px; padding: 8px 14px; border-radius: 6px; border: 1px solid #50545c;
     background: var(--bar2); color: var(--text); cursor: pointer; }
@@ -31,17 +42,21 @@
   input[type=number], input[type=text] { font: inherit; font-size: 15px; background: #0d0e10; color: var(--text);
     border: 1px solid #50545c; border-radius: 6px; padding: 6px 8px; }
   input[type=number] { width: 60px; }
-  .overlay { position: absolute; inset: 0; background: rgba(16,17,20,.96); overflow-y: auto; padding: 24px 32px; box-sizing: border-box; }
-  .overlay h1 { margin: 0 0 8px; font-size: 26px; }
-  .overlay h2 { font-size: 18px; margin: 20px 0 6px; }
-  .overlay p, .overlay li { font-size: 16px; line-height: 1.45; color: #dfe2e6; }
-  .overlay ol { padding-left: 22px; }
-  .opts { display: flex; gap: 28px; flex-wrap: wrap; margin: 8px 0 16px; font-size: 16px; }
-  .opts label { display: block; margin: 4px 0; }
-  .warnbox { border-left: 4px solid var(--warn); padding: 6px 12px; background: #2a2416; }
+  .overlay { position: absolute; inset: 0; background: rgba(16,17,20,.97); overflow-y: auto; padding: 24px 32px 40px; box-sizing: border-box; }
+  .overlay h1 { margin: 0 0 8px; font-size: 28px; }
+  .overlay h2 { font-size: 19px; margin: 22px 0 6px; color: #fff; }
+  .overlay p, .overlay li { font-size: 16px; line-height: 1.5; color: #dfe2e6; }
+  .overlay li { margin-bottom: 6px; }
+  .overlay ol, .overlay ul { padding-left: 22px; margin: 4px 0; }
+  .cols { display: flex; gap: 40px; flex-wrap: wrap; }
+  .cols > div { flex: 1 1 420px; min-width: 0; }
+  .opts { display: flex; gap: 28px; flex-wrap: wrap; margin: 8px 0 12px; font-size: 16px; }
+  .opts label { display: block; margin: 5px 0; }
+  .note { color: var(--muted); }
   .errbox { border-left: 4px solid var(--bad); padding: 6px 12px; background: #2c1a1a; white-space: pre-wrap; font-family: Consolas, monospace; font-size: 13px; }
+  .sounds td { padding: 3px 12px 3px 0; border: 0; font-size: 15px; }
   table { border-collapse: collapse; font-size: 15px; margin: 6px 0; }
-  th, td { border-bottom: 1px solid #3a3d44; padding: 5px 12px; text-align: left; }
+  th, td { border-bottom: 1px solid #3a3d44; padding: 6px 12px; text-align: left; vertical-align: top; }
   th { color: var(--muted); font-weight: 600; }
   .pass { color: var(--good); font-weight: 700; }
   .fail { color: var(--bad); font-weight: 700; }
@@ -49,35 +64,127 @@
     border-radius: 6px; font: 12px Consolas, monospace; box-sizing: border-box; }
   .hidden { display: none !important; }
   kbd { background: #33363c; border-radius: 4px; padding: 1px 6px; font-size: 14px; }
+  .btnrow { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+  svg.pic text { font-family: "Segoe UI", system-ui, sans-serif; }
 </style>
 </head>
 <body>
 <div id="top">
-  <div id="count"></div>
-  <div id="stepline">Bench test 1: glare-cut with no power</div>
-  <div id="msg">Connect the board to begin</div>
-  <div id="sub">Plug in the QT Py, then press Connect below.</div>
+  <div id="topText">
+    <div id="stepline">Test 1: does the lens block glare with the power off?</div>
+    <div id="msg">Connect the board to begin</div>
+    <div id="sub">Press "Connect to board" below. In the pop-up, click the board (it may be called "USB Serial Device"), then click Connect.</div>
+    <div id="why"></div>
+  </div>
+  <div id="sparkWrap" class="hidden"><div id="spark"></div><div>this sample so far</div></div>
+  <div id="countWrap"><div id="count"></div><div id="countLabel"></div></div>
 </div>
 
 <div id="panel">
   <svg id="dial" aria-hidden="true"></svg>
 
   <div id="setup" class="overlay">
-    <h1>Bench test 1</h1>
-    <p>This page runs the whole test for you. It changes the screen color, sends the commands to the board,
-      and tells you when to move things. Your only job is to hold the sensor and turn the samples.</p>
-    <h2>Before you start</h2>
-    <ol>
-      <li>Turn the room lights off, so the screen is the only light. (Optional: a short ring of dark paper taped around the sensor chip blocks stray light even better.)</li>
-      <li>Draw a small straight line with a marker (or stick a strip of tape) along one edge of the sunglasses lens and of the peeled cell. This is the "mark" you will point at each angle.</li>
-      <li>Set the screen brightness to about three quarters.</li>
-      <li>Make this browser window full screen with <kbd>F11</kbd>.</li>
-    </ol>
+    <h1>Test 1: does the lens block glare with the power off?</h1>
+    <div class="cols">
+      <div>
+        <p><b>What this test checks.</b> Laptop screens give off polarized light: its light waves all wiggle in one
+          direction, like glare bouncing off water or a road. A polarized lens blocks that light when it's turned one way,
+          and lets it through when it's turned a quarter turn. In this test <b>the screen plays the glare</b> and
+          <b>the sensor plays your eye</b>. You turn each sample slowly while the sensor measures how much light gets through.</p>
+        <p><b>The page does the rest.</b> It changes the screen color, talks to the board, counts down, beeps, and shows
+          the results. A full run takes about 13 minutes. <b>First time? Press "Practice run"</b>: it only does your
+          sunglasses on a white screen, about 2 minutes.</p>
+
+        <h2>What you need</h2>
+        <ul>
+          <li>The small sensor board plugged into the QT Py with its cable, and the QT Py plugged into this laptop.</li>
+          <li><b>Polarized sunglasses.</b> Check them first: look at this screen through them and slowly turn them.
+            If the screen goes much darker at one angle, they're polarized. If nothing changes, they won't work for this test.
+            If they're in a frame, fold the arms: only one lens goes on the screen.</li>
+          <li><b>Optional: a liquid crystal cell</b> (the Adafruit light valve) with the plastic film peeled off one side.
+            The peeled side is bare glass, and it goes against the screen. Leave its two wires unconnected: this test uses no power.
+            Don't have one ready? Untick it below.</li>
+          <li>A marker pen or a small strip of tape.</li>
+        </ul>
+
+        <h2>Get ready</h2>
+        <ol>
+          <li><b>Draw a short arrow near the edge of each sample</b>, pointing outward like a clock hand. Keep it away from
+            the middle, because the sensor looks through there. Any direction is fine.</li>
+          <li><b>Turn the room lights off</b>, so the screen is the only light. Room light sneaking under the sensor makes
+            the glare numbers look worse than they are. No tube or paper is needed.</li>
+          <li>Plug in the laptop charger, turn Night light off, and set the screen brightness to about three quarters.</li>
+          <li>Tip the screen back as far as it goes and rest your elbows on the desk.</li>
+          <li>Turn the sound on, and press <kbd>F11</kbd> to make this page full screen.</li>
+        </ol>
+      </div>
+
+      <div>
+        <h2 style="margin-top:0">How to hold it</h2>
+        <svg class="pic" viewBox="0 0 560 240" width="100%" style="max-width:560px" role="img"
+             aria-label="Side view: screen, then the lens flat on it, then the sensor board pressed on the lens with its chip facing the screen. Front view: the lens over the dashed circle with its arrow pointing at the highlighted angle.">
+          <text x="10" y="18" fill="#a9adb4" font-size="13">SIDE VIEW</text>
+          <rect x="30" y="35" width="16" height="175" rx="3" fill="#e8eaed"/>
+          <text x="8" y="232" fill="#dfe2e6" font-size="13">Laptop screen</text>
+          <rect x="46" y="85" width="7" height="75" rx="2" fill="#2bb3a3"/>
+          <text x="58" y="76" fill="#2bb3a3" font-size="13">Lens or cell, flat on the screen</text>
+          <rect x="53" y="104" width="6" height="10" fill="#f2c94c"/>
+          <rect x="59" y="96" width="9" height="28" rx="2" fill="#8e7cf0"/>
+          <text x="76" y="112" fill="#8e7cf0" font-size="13">Sensor board, chip side</text>
+          <text x="76" y="128" fill="#8e7cf0" font-size="13">touching the lens</text>
+          <text x="76" y="150" fill="#f2c94c" font-size="13">(chip = tiny square)</text>
+          <path d="M64 124 L64 192 L190 192" stroke="#a9adb4" stroke-width="2" fill="none"/>
+          <rect x="190" y="180" width="40" height="24" rx="3" fill="#4c9aff"/>
+          <text x="150" y="225" fill="#4c9aff" font-size="13">QT Py, USB to laptop</text>
+
+          <text x="300" y="18" fill="#a9adb4" font-size="13">FRONT VIEW (what you see)</text>
+          <circle cx="420" cy="135" r="90" fill="none" stroke="#a9adb4" stroke-width="2" stroke-dasharray="2 7"/>
+          <text x="516" y="140" fill="#a9adb4" font-size="13">0°</text>
+          <text x="410" y="36" fill="#a9adb4" font-size="13">90°</text>
+          <text x="300" y="140" fill="#a9adb4" font-size="13">180°</text>
+          <line x1="476" y1="103" x2="499" y2="90" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+          <text x="500" y="83" fill="#fff" font-size="15" font-weight="700">30°</text>
+          <circle cx="420" cy="135" r="48" fill="#2bb3a3" opacity=".85"/>
+          <rect x="406" y="123" width="28" height="24" rx="3" fill="#8e7cf0"/>
+          <line x1="440" y1="123" x2="458" y2="113" stroke="#111" stroke-width="3"/>
+          <path d="M461 111 l-10 -1 l4 8 z" fill="#111"/>
+        </svg>
+        <p class="note" style="margin-top:0">Turn the lens so your arrow points at the thick highlighted line. Each time,
+          turn it a little to the left (anticlockwise), toward the bigger number.</p>
+
+        <h2>What your hands do</h2>
+        <p>One hand holds the sensor board on the middle of the lens, chip side touching it. The other hand turns the lens
+          by its edge. The sensor can turn along with the lens; that's fine. <b>Press lightly</b>: pressing hard makes
+          colored blotches on the screen and spoils the readings.</p>
+
+        <h2>Sounds and keys</h2>
+        <table class="sounds">
+          <tr><td>3 ticks</td><td>finish moving, a measurement is about to start</td></tr>
+          <tr><td>1 beep</td><td>measuring now, keep still</td></tr>
+          <tr><td>2 quick beeps</td><td>done, go to the next step</td></tr>
+          <tr><td>low buzz</td><td>something needs fixing, read the top of the screen</td></tr>
+          <tr><td>2 rising notes</td><td>all finished</td></tr>
+        </table>
+        <p><kbd>Space</kbd> I'm ready, go now. <kbd>P</kbd> pause the countdown (press again to carry on).
+          "Skip this sample" moves on to the next sample. <kbd>Esc</kbd> stops the whole test; starting again begins from step 1.</p>
+
+        <h2>What happens, in order</h2>
+        <ol>
+          <li><b>Zero reading:</b> your fingertip over the chip.</li>
+          <li><b>100% reading:</b> the sensor straight on the screen, nothing in between.</li>
+          <li><b>Sunglasses:</b> 13 readings while you turn the lens half a turn, 15° at a time.</li>
+          <li><b>Liquid crystal cell:</b> the same.</li>
+          <li>Steps 2 to 4 again on a red screen, then on a blue screen.</li>
+          <li><b>Results</b>, with PASS or FAIL and what they mean.</li>
+        </ol>
+      </div>
+    </div>
+
     <h2>What to test</h2>
     <div class="opts">
       <div>
-        <label><input type="checkbox" id="useSun" checked> Sunglasses lens</label>
-        <label><input type="checkbox" id="useCell" checked> Peeled liquid crystal cell</label>
+        <label><input type="checkbox" id="useSun" checked> Polarized sunglasses</label>
+        <label><input type="checkbox" id="useCell" checked> Liquid crystal cell (film peeled off one side)</label>
       </div>
       <div>
         <label><input type="checkbox" id="useWhite" checked> White screen</label>
@@ -85,71 +192,99 @@
         <label><input type="checkbox" id="useBlue" checked> Blue screen</label>
       </div>
       <div>
-        <label>Seconds to get ready <input type="number" id="readySec" value="15" min="3" max="120"></label>
-        <label>Seconds per angle <input type="number" id="angleSec" value="6" min="2" max="60"></label>
+        <label>Seconds to set up each step <input type="number" id="readySec" value="15" min="3" max="120"></label>
+        <label>Seconds to turn between readings <input type="number" id="angleSec" value="8" min="2" max="60"></label>
       </div>
     </div>
-    <p class="muted" style="color:var(--muted)">During the test: <kbd>Space</kbd> skips the wait, <kbd>P</kbd> pauses, <kbd>Esc</kbd> stops.</p>
     <div id="setupErr"></div>
-    <p>
+    <div class="btnrow">
       <button class="primary" id="btnConnect">Connect to board</button>
-      <button id="btnConnectAll" title="Use this if the board is not in the list">Board not listed? Show every port</button>
-      <button class="primary" id="btnStart" disabled>Start test</button>
-    </p>
+      <button id="btnConnectAll">Board not in the pop-up? Try this</button>
+      <button class="primary" id="btnPractice" disabled>Practice run (sunglasses, white, 2 min)</button>
+      <button class="primary" id="btnStart" disabled>Start full test</button>
+    </div>
   </div>
 
   <div id="results" class="overlay hidden">
-    <h1>Results</h1>
+    <h1 id="resultTitle">Results</h1>
     <div id="resultBody"></div>
-    <h2>Readings (CSV)</h2>
+    <h2>All the numbers (this is what gets copied)</h2>
     <textarea id="csvOut" readonly></textarea>
-    <p>
+    <div class="btnrow">
       <button class="primary" id="btnCopy">Copy results</button>
-      <button id="btnSave">Save CSV file</button>
-      <button id="btnAgain">Run again</button>
-      <span id="copyNote" style="color:var(--muted)"></span>
-    </p>
-    <p style="color:var(--muted)">Paste the copied results into the project thread so Claude can check them against the design criteria.</p>
+      <button id="btnSave">Save as a spreadsheet file</button>
+      <button id="btnAgain">Back to the start screen</button>
+      <span id="copyNote" class="note" style="align-self:center"></span>
+    </div>
+    <p><b>Next:</b> press Copy results, then paste it (<kbd>Ctrl</kbd>+<kbd>V</kbd>) in your chat with Claude in this
+      project. Claude will go through the results with you.</p>
   </div>
 </div>
 
 <div id="bottom">
-  <button id="btnGo" disabled>Go now (Space)</button>
+  <button id="btnGo" disabled>I'm ready, go now (Space)</button>
   <button id="btnPause" disabled>Pause (P)</button>
   <button id="btnSkip" disabled>Skip this sample</button>
   <button id="btnStop" disabled>Stop (Esc)</button>
   <span class="grow"></span>
-  <input type="text" id="manual" placeholder="Type a command for the board" size="28">
-  <button id="btnSend" disabled>Send</button>
-  <button id="btnLog">Hide log</button>
+  <span id="legend">Sounds: 3 ticks = get ready · 1 beep = measuring, keep still · 2 beeps = done, move on</span>
+  <button id="btnLog">Show board messages</button>
 </div>
-<pre id="log"></pre>
+<div id="logArea" class="hidden">
+  <div id="logHead">Board messages (for fixing problems)
+    <input type="text" id="manual" placeholder="Type a command for the board" size="28">
+    <button id="btnSend" disabled>Send</button>
+  </div>
+  <pre id="log"></pre>
+</div>
 
 <script>
 "use strict";
 const $ = id => document.getElementById(id);
 const COLORS = { white: "#ffffff", red: "#ff0000", blue: "#0000ff" };
+const SAMPLES = {
+  sun: { thing: "lens", label: "Polarized sunglasses" },
+  cell: { thing: "cell", label: "Liquid crystal cell" },
+};
 const ADAFRUIT_USB_VENDOR = 0x239A;
+const ANGLES_PER_SWEEP = 13;
 
 let port = null, reader = null, writer = null;
 let buf = "", cursor = 0, connected = false, running = false;
 let paused = false, aborted = false, goFlag = false, skipFlag = false, skipAllowed = false;
-let targetAngle = null, bgColor = "white", audio = null;
+let targetAngle = null, bgColor = "white", audio = null, wakeLock = null;
+let stepNo = 0, stepTotal = 0;
 
 class Abort extends Error {}
 
 // ---------- display ----------
-function say(step, msg, sub) {
+function say(step, msg, sub, why) {
   if (step !== null) $("stepline").textContent = step;
   $("msg").textContent = msg;
   $("sub").textContent = sub || "";
+  if (why !== undefined) $("why").textContent = why || "";
 }
-function setCount(t) { $("count").textContent = t; }
+function nextStep(title) {
+  stepNo++;
+  return `Step ${stepNo} of ${stepTotal} · ${title}`;
+}
+function setCount(t, label) { $("count").textContent = t; $("countLabel").textContent = label || ""; }
 function setColor(name) { bgColor = name; $("panel").style.background = COLORS[name]; drawDial(); }
 function logText(s) {
   const el = $("log");
   el.textContent = (el.textContent + s.replace(/\r/g, "")).slice(-60000);
   el.scrollTop = el.scrollHeight;
+}
+function showSpark(points) {
+  if (!points) { $("sparkWrap").classList.add("hidden"); return; }
+  $("sparkWrap").classList.remove("hidden");
+  let h = "";
+  for (let i = 0; i < ANGLES_PER_SWEEP; i++) {
+    const p = points[i];
+    h += p === undefined ? '<div class="empty"></div>'
+      : `<div class="bar" title="${p.angle}°: ${p.pct.toFixed(1)}%" style="height:${Math.max(2, Math.min(100, p.pct)) * 0.7}px"></div>`;
+  }
+  $("spark").innerHTML = h;
 }
 
 function drawDial() {
@@ -163,20 +298,22 @@ function drawDial() {
   s += `<text x="${cx}" y="${cy + inner + 22}" fill="${faint}" font-size="14" text-anchor="middle">sensor here</text>`;
   for (let a = 0; a < 360; a += 15) {
     const rad = a * Math.PI / 180, cos = Math.cos(rad), sin = -Math.sin(rad);
-    const isTarget = targetAngle !== null && (a === targetAngle || a === targetAngle + 180);
+    const isTarget = targetAngle !== null && a === targetAngle;
     const len = isTarget ? 44 : (a % 45 === 0 ? 24 : 14);
     const x1 = cx + cos * (R - len), y1 = cy + sin * (R - len), x2 = cx + cos * R, y2 = cy + sin * R;
-    s += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${isTarget ? ink : faint}" stroke-width="${isTarget ? 7 : 2}" stroke-linecap="round"/>`;
+    s += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${isTarget ? ink : faint}" stroke-width="${isTarget ? 8 : 2}" stroke-linecap="round"/>`;
     if (a <= 180) {
-      const lx = cx + cos * (R + 24), ly = cy + sin * (R + 24) + 6;
-      s += `<text x="${lx}" y="${ly}" fill="${isTarget ? ink : faint}" font-size="${isTarget ? 24 : 15}" font-weight="${isTarget ? 700 : 400}" text-anchor="middle">${a}°</text>`;
+      const lx = cx + cos * (R + 26), ly = cy + sin * (R + 26) + 6;
+      s += `<text x="${lx}" y="${ly}" fill="${isTarget ? ink : faint}" font-size="${isTarget ? 26 : 15}" font-weight="${isTarget ? 700 : 400}" text-anchor="middle">${a}°</text>`;
     }
   }
   if (targetAngle !== null) {
-    // Guide line through the center, so the sample's mark can be lined up with it.
+    // Faint pointer from the sensor spot to the highlighted angle: where the sample's arrow should point.
     const rad = targetAngle * Math.PI / 180, cos = Math.cos(rad), sin = -Math.sin(rad);
-    s += `<line x1="${cx - cos * (R - 50)}" y1="${cy - sin * (R - 50)}" x2="${cx - cos * (inner + 16)}" y2="${cy - sin * (inner + 16)}" stroke="${faint}" stroke-width="2"/>`;
-    s += `<line x1="${cx + cos * (inner + 16)}" y1="${cy + sin * (inner + 16)}" x2="${cx + cos * (R - 50)}" y2="${cy + sin * (R - 50)}" stroke="${faint}" stroke-width="2"/>`;
+    const x1 = cx + cos * (inner + 14), y1 = cy + sin * (inner + 14), x2 = cx + cos * (R - 56), y2 = cy + sin * (R - 56);
+    s += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${faint}" stroke-width="3"/>`;
+    const px = sin, py = -cos;   // perpendicular to the pointer
+    s += `<path d="M${x2 + cos * 14} ${y2 + sin * 14} L${x2 + px * 8} ${y2 + py * 8} L${x2 - px * 8} ${y2 - py * 8} Z" fill="${faint}"/>`;
   }
   svg.innerHTML = s;
 }
@@ -193,20 +330,25 @@ function beep(freq, ms) {
     o.start(); o.stop(audio.currentTime + ms / 1000);
   } catch (e) { /* sound is optional */ }
 }
+const soundMeasuring = () => beep(1000, 140);
+async function soundDone() { beep(1400, 60); await sleep(110); beep(1400, 60); }
+const soundProblem = () => beep(220, 500);
+async function soundFinished() { beep(880, 150); await sleep(180); beep(1320, 260); }
 
 // ---------- serial ----------
 async function connect(useFilter) {
   $("setupErr").innerHTML = "";
   if (!("serial" in navigator)) {
-    showSetupError("This browser can't talk to the board. Open this file in Google Chrome or Microsoft Edge.");
+    showSetupError("This browser can't talk to the board. Close this tab, then right-click the file > Open with > Google Chrome (or Microsoft Edge).");
     return;
   }
   try {
     port = await navigator.serial.requestPort(useFilter ? { filters: [{ usbVendorId: ADAFRUIT_USB_VENDOR }] } : {});
     await port.open({ baudRate: 115200 });
   } catch (e) {
-    if (e.name !== "NotFoundError") showSetupError("Could not open the board: " + e.message +
-      "\nIf another program (Thonny, Mu, a serial monitor) has it open, close that program and try again.");
+    if (e.name === "NotFoundError") return;   // pop-up closed without picking
+    showSetupError("Could not open the board: " + e.message +
+      "\nIf another program (Thonny, Mu, a serial monitor) has it open, close that program. Or unplug the board, plug it back in, press F5, and connect again.");
     return;
   }
   const dec = new TextDecoderStream();
@@ -219,9 +361,9 @@ async function connect(useFilter) {
   readLoop();
   $("btnConnect").textContent = "Connected";
   $("btnConnect").disabled = $("btnConnectAll").disabled = true;
-  $("btnStart").disabled = false;
+  $("btnStart").disabled = $("btnPractice").disabled = false;
   $("btnSend").disabled = false;
-  say(null, "Board connected", "Read the steps, then press Start test.");
+  say(null, "Board connected", "Read the start screen, then press Practice run or Start full test.");
 }
 
 async function readLoop() {
@@ -234,7 +376,7 @@ async function readLoop() {
     }
   } catch (e) { /* port closed or unplugged */ }
   connected = false;
-  say(null, "The board disconnected", "Plug it back in and reload this page.");
+  say(null, "The board disconnected", "Plug it back in, press F5 to reload this page, and connect again.", "");
 }
 
 async function send(s) {
@@ -274,7 +416,7 @@ function waitFor(re, ms, ignoreErrors) {
 const PROMPT = /\n> $/;
 
 async function restartProgram() {
-  say("Starting", "Restarting the test program on the board", "This clears any old readings.");
+  say("Starting", "Restarting the test program on the board", "This clears any old readings. It takes a few seconds.", "");
   cursor = buf.length;
   await send("\x03");          // stop the program (prints a harmless KeyboardInterrupt)
   await sleep(500);
@@ -309,12 +451,12 @@ async function countdown(secs, opts) {
     if (!paused) left -= 100;
     const shown = paused ? "paused" : String(Math.ceil(left / 1000));
     if (shown !== lastShown) {
-      setCount(shown);
-      if (!paused && left > 0 && left <= 3000 && opts.tick !== false) beep(660, 80);
+      setCount(shown, paused ? "press P to carry on" : (opts.label || "seconds"));
+      if (!paused && left > 0 && left <= 3000) beep(660, 80);
       lastShown = shown;
     }
   }
-  setCount("");
+  setCount("", "");
   $("btnGo").disabled = true;
   $("btnSkip").disabled = true;
   return "go";
@@ -322,93 +464,116 @@ async function countdown(secs, opts) {
 
 // ---------- test steps ----------
 const readings = [];   // {name, angle, pct}
-let readyS = 15, angleS = 6;
+let readyS = 15, angleS = 8;
 
 async function darkStep() {
-  say("Step: dark reading", "Cover the sensor chip completely",
-    "Press your fingertip firmly over it so no light gets in.");
-  await countdown(readyS);
-  say(null, "Hold still: reading", "Keep it covered.");
+  say(nextStep("Zero reading"), "Cover the chip on the sensor board with your fingertip",
+    "The chip is the tiny square in the middle of the small sensor board. Point the board away from the screen and press firmly. Keep it covered until two quick beeps.",
+    "Why: this is what the sensor reads in total darkness. It is taken off every reading, so 0% means no light.");
+  await countdown(readyS, { label: "seconds to get ready" });
+  say(null, "Measuring, keep it covered", "About 1 second, until two quick beeps.");
+  soundMeasuring();
   await command("d");
   const m = await waitFor(/dark = (\d+) counts/, 8000);
   await waitFor(PROMPT, 3000);
-  beep(1200, 120);
-  logText(`\n[runner] dark = ${m[1]}\n`);
+  await soundDone();
+  logText(`\n[runner] zero reading = ${m[1]}\n`);
 }
 
 async function referenceStep(color) {
+  const title = nextStep(`100% reading, ${color} screen`);
+  let msg = "Take the sample off. Sensor straight on the screen";
+  let sub = "Chip side touching the screen, in the middle of the dashed circle. Nothing in between. Hold still until two quick beeps.";
   while (true) {
-    say(`Step: ${color} reference`, "Take any sample away. Hold the sensor flat on the dashed circle, chip facing the screen",
-      "Nothing between the sensor and the screen. This reading counts as 100%.");
     targetAngle = null; drawDial();
-    await countdown(readyS);
-    say(null, "Hold still: reading", "");
+    say(title, msg, sub,
+      "Why: this is the screen's full brightness. Every reading on this color is a percent of it. Each color is a different brightness, so this is redone for every color.");
+    await countdown(readyS, { label: "seconds to get ready" });
+    say(null, "Measuring 100%, hold still", "About 1 second, until two quick beeps.");
+    soundMeasuring();
     const segStart = buf.length;
     await command("r");
     await waitFor(/reference = (\d+) counts/, 8000);
     await waitFor(PROMPT, 3000);
     const seg = buf.slice(segStart);
-    beep(1200, 120);
     if (/saturated/.test(seg)) {
-      say(null, "Too bright for the sensor", "Lower the screen brightness by a few steps. The reference will be taken again.");
-      beep(300, 400);
-      await countdown(Math.max(readyS, 10), { tick: false });
+      soundProblem();
+      msg = "Too much light for the sensor";
+      sub = "Put the sensor down, press the brightness-down key 2 or 3 times, then put it back on the circle. It measures again after the countdown.";
       continue;
     }
     if (/weak/.test(seg)) {
-      say(null, "Too little light", "Turn the screen brightness up and the room lights down. The reference will be taken again.");
-      beep(300, 400);
-      await countdown(Math.max(readyS, 10), { tick: false });
+      soundProblem();
+      msg = "Not enough light reached the sensor";
+      sub = "Check the chip side is touching the screen, inside the dashed circle. If it was, turn the screen brightness up. It measures again after the countdown.";
       continue;
     }
+    await soundDone();
     return;
   }
 }
 
-async function sweepStep(name, sample, color) {
-  targetAngle = 0; drawDial();
-  say(`Step: ${sample}, ${color} screen`,
-    `Hold the ${sample} flat over the circle and press the sensor on top`,
-    `Point its mark at 0°. You'll turn it 15° at a time. Press "Skip this sample" if you don't have it.`);
-  if (await countdown(readyS, { skippable: true }) === "skip") { targetAngle = null; drawDial(); return; }
+async function sweepStep(prefix, color) {
+  const name = `${prefix}-${color}`, thing = SAMPLES[prefix].thing;
+  const points = [];
+  targetAngle = 0; drawDial(); showSpark(points);
+  say(nextStep(`${SAMPLES[prefix].label}, ${color} screen`),
+    prefix === "cell" ? "Lay the cell on the circle, bare glass against the screen, sensor on top"
+                      : "Lay the lens on the circle, sensor on top",
+    `Chip side of the sensor touching the middle of the ${thing}. Turn the ${thing} so your arrow points at 0° (the thick line on the right). No ${thing}? Press "Skip this sample".`,
+    `Why: a polarizing ${thing} blocks the most light at one angle and lets the most through a quarter turn later. Measuring every 15° finds both.`);
+  if (await countdown(readyS, { skippable: true, label: "seconds to get ready" }) === "skip") {
+    targetAngle = null; drawDial(); showSpark(null); return;
+  }
   await command("s " + name);
   while (true) {
     const m = await waitFor(/(\d+) deg > $|\n> $/, 8000);
     if (!m[1]) break;                       // back at the main prompt: sweep finished
-    const angle = Number(m[1]);
+    const angle = Number(m[1]), n = angle / 15 + 1;
     targetAngle = angle; drawDial();
     if (angle > 0) {
-      say(null, `Turn the mark to ${angle}°`, `Keep the sensor pressed flat. Reading in a moment.`);
-      if (await countdown(angleS, { skippable: true }) === "skip") {
+      const last = points[points.length - 1];
+      say(null, `Turn the ${thing} so the arrow points at ${angle}°`,
+        `Turn it a little to the left (anticlockwise), toward the bigger number. The sensor can turn with it. Close is good enough. Last reading: ${last.pct.toFixed(1)}% got through at ${last.angle}°.`,
+        angle === 180
+          ? `Reading ${n} of ${ANGLES_PER_SWEEP}, the last one. Half a turn brings the ${thing} back to how it started, so expect about the same as the first reading.`
+          : `Reading ${n} of ${ANGLES_PER_SWEEP}. Watch the bars at the top right: they should drop to a low point and rise again as you turn.`);
+      if (await countdown(angleS, { skippable: true, label: "seconds to turn" }) === "skip") {
         await send("q\r");
         await waitFor(PROMPT, 5000);
         break;
       }
     }
-    say(null, `Hold still at ${angle}°: reading`, "");
-    beep(1000, 120);
+    say(null, `Measuring at ${angle}°, keep still`, "About 1 second, until two quick beeps. If you moved by accident, just carry on.");
+    soundMeasuring();
     await send("\r");
     const r = await waitFor(/(\d+) deg\s+(-?[\d.]+) %/, 8000);
-    readings.push({ name, angle: Number(r[1]), pct: Number(r[2]) });
-    setCount(Number(r[2]).toFixed(1) + "%");
-    beep(1400, 60); await sleep(90); beep(1400, 60);
+    const p = { name, angle: Number(r[1]), pct: Number(r[2]) };
+    readings.push(p); points.push(p); showSpark(points);
+    setCount(p.pct.toFixed(1) + "%", "got through");
+    await soundDone();
   }
-  targetAngle = null; drawDial();
+  targetAngle = null; drawDial(); showSpark(null);
 }
 
-async function runTest() {
+async function runTest(practice) {
   readyS = Math.max(3, Number($("readySec").value) || 15);
-  angleS = Math.max(2, Number($("angleSec").value) || 6);
-  const samples = [];
-  if ($("useSun").checked) samples.push(["sun", "sunglasses lens"]);
-  if ($("useCell").checked) samples.push(["cell", "peeled cell (peeled side toward the screen)"]);
-  const colors = ["white", "red", "blue"].filter(c => $("use" + c[0].toUpperCase() + c.slice(1)).checked);
-  if (!samples.length || !colors.length) { showSetupError("Pick at least one sample and one screen color."); return; }
+  angleS = Math.max(2, Number($("angleSec").value) || 8);
+  let samples = [], colors = [];
+  if (practice) { samples = ["sun"]; colors = ["white"]; }
+  else {
+    if ($("useSun").checked) samples.push("sun");
+    if ($("useCell").checked) samples.push("cell");
+    colors = ["white", "red", "blue"].filter(c => $("use" + c[0].toUpperCase() + c.slice(1)).checked);
+  }
+  if (!samples.length || !colors.length) { showSetupError("Tick at least one sample and one screen color."); return; }
 
   running = true; aborted = false; paused = false; readings.length = 0;
+  stepNo = 0; stepTotal = 1 + colors.length * (1 + samples.length);
   $("setup").classList.add("hidden");
   $("results").classList.add("hidden");
   $("btnPause").disabled = $("btnStop").disabled = false;
+  try { wakeLock = await navigator.wakeLock.request("screen"); } catch (e) { /* screen may still dim; setup screen says how to avoid that */ }
   try {
     setColor("white");
     await restartProgram();
@@ -416,32 +581,40 @@ async function runTest() {
     for (const color of colors) {
       setColor(color);
       await referenceStep(color);
-      for (const [prefix, label] of samples) await sweepStep(`${prefix}-${color}`, label, color);
+      for (const prefix of samples) await sweepStep(prefix, color);
     }
-    say("Finishing", "Collecting the results", "");
+    say("Finishing", "Collecting the results", "", "");
     await command("t"); await waitFor(PROMPT, 5000);
     const csvStart = buf.length;
     await command("c"); await waitFor(PROMPT, 5000);
     const raw = buf.slice(csvStart).replace(/\r/g, "");
     const csvText = raw.slice(raw.indexOf("sweep,angle_deg,percent")).replace(/\n> $/, "").trim();
-    showResults(csvText);
-    beep(880, 150); await sleep(170); beep(1320, 250);
+    showResults(csvText, practice);
+    say("Done", "Finished: see the results below", "", "");
+    soundFinished();
   } catch (e) {
     if (e instanceof Abort) {
-      say(null, "Test stopped", "Press Run again to start over.");
-      showResults(null);
+      say(null, "Test stopped", "The readings taken so far are below. Press Back to the start screen to run again.", "");
+      showResults(null, practice);
     } else {
-      say(null, "Something went wrong", e.message.split("\n")[0]);
+      soundProblem();
+      say(null, "Something went wrong", "Unplug the board, plug it back in, press F5 to reload this page, then connect again.", "");
       showSetupError(e.message);
       $("setup").classList.remove("hidden");
     }
   } finally {
-    running = false; targetAngle = null; setCount(""); setColor("white");
+    running = false; targetAngle = null; setCount("", ""); setColor("white"); showSpark(null);
     ["btnGo", "btnPause", "btnSkip", "btnStop"].forEach(id => $(id).disabled = true);
+    if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
   }
 }
 
 // ---------- results ----------
+function friendlyName(name) {
+  const [prefix, color] = name.split("-");
+  return `${SAMPLES[prefix] ? SAMPLES[prefix].label : prefix}, ${color || "?"} screen`;
+}
+
 function analyse(rows) {
   const bySweep = {};
   rows.forEach(r => (bySweep[r.name] = bySweep[r.name] || []).push(r));
@@ -450,12 +623,12 @@ function analyse(rows) {
     const lo = pts.reduce((a, b) => (b.pct < a.pct ? b : a));
     const hi = pts.reduce((a, b) => (b.pct > a.pct ? b : a));
     const lowLimit = name.includes("white") ? 5 : 10;
-    out.push({ name, lo, hi, lowLimit, loOk: lo.pct <= lowLimit, hiOk: hi.pct >= 70, full: pts.length === 13 });
+    out.push({ name, lo, hi, lowLimit, loOk: lo.pct <= lowLimit, hiOk: hi.pct >= 70, full: pts.length === ANGLES_PER_SWEEP });
   }
   return out;
 }
 
-function showResults(csvText) {
+function showResults(csvText, practice) {
   let rows = readings.slice();
   if (csvText) {
     rows = csvText.split("\n").slice(1).map(l => l.split(",")).filter(p => p.length === 3)
@@ -463,17 +636,22 @@ function showResults(csvText) {
   }
   const csv = csvText || ("sweep,angle_deg,percent\n" + rows.map(r => `${r.name},${r.angle},${r.pct.toFixed(2)}`).join("\n"));
   $("csvOut").value = csv;
+  $("resultTitle").textContent = practice ? "Practice run results" : "Results";
   const res = analyse(rows);
   const tag = ok => `<span class="${ok ? "pass" : "fail"}">${ok ? "PASS" : "FAIL"}</span>`;
   let html = "";
   if (!rows.length) html = "<p>No readings were taken.</p>";
   else {
-    html += "<table><tr><th>Sweep</th><th>Lowest (glare through)</th><th>Highest (scene light)</th><th>Contrast</th></tr>";
+    html += `<p><b>Least light through</b> is the angle where the sample blocked the most. This is glare getting through,
+      so smaller is better. Pass: 5% or less on white, 10% or less on red and blue (looser, because this sensor only roughly sees color).</p>
+      <p><b>Most light through</b> is the angle where it let the most through, like looking at the world. Pass: 70% or more,
+      so it isn't too dark to see through.</p>`;
+    html += "<table><tr><th>Sample and screen</th><th>Least light through (glare)</th><th>Most light through</th><th>Most ÷ least<br><span class='note'>bigger is better, not graded</span></th></tr>";
     for (const r of res) {
-      html += `<tr><td>${r.name}${r.full ? "" : " (partial)"}</td>` +
-        `<td>${r.lo.pct.toFixed(1)}% at ${r.lo.angle}° · limit ${r.lowLimit}% ${tag(r.loOk)}</td>` +
-        `<td>${r.hi.pct.toFixed(1)}% at ${r.hi.angle}° · limit 70% ${tag(r.hiOk)}</td>` +
-        `<td>${r.lo.pct > 0 ? Math.round(r.hi.pct / r.lo.pct) + " : 1" : "–"}</td></tr>`;
+      html += `<tr><td>${friendlyName(r.name)}${r.full ? "" : " <span class='note'>(stopped early)</span>"}</td>` +
+        `<td>${r.lo.pct.toFixed(1)}% at ${r.lo.angle}° · needs ${r.lowLimit}% or less · ${tag(r.loOk)}</td>` +
+        `<td>${r.hi.pct.toFixed(1)}% at ${r.hi.angle}° · needs 70% or more · ${tag(r.hiOk)}</td>` +
+        `<td>${r.lo.pct > 0 ? Math.round(r.hi.pct / r.lo.pct) + " times" : "–"}</td></tr>`;
     }
     html += "</table>";
     const comp = [];
@@ -481,12 +659,25 @@ function showResults(csvText) {
       const s = res.find(r => r.name === "sun-" + c), cell = res.find(r => r.name === "cell-" + c);
       if (s && cell) {
         const diff = cell.lo.pct - s.lo.pct;
-        comp.push(`<tr><td>${c}</td><td>${diff >= 0 ? diff.toFixed(1) + " points worse" : (-diff).toFixed(1) + " points better"} · limit 2 points ${tag(diff <= 2)}</td></tr>`);
+        comp.push(`<tr><td>${c} screen</td><td>cell ${cell.lo.pct.toFixed(1)}%, sunglasses ${s.lo.pct.toFixed(1)}%: ` +
+          `${diff >= 0 ? diff.toFixed(1) + " higher" : (-diff).toFixed(1) + " lower"} · needs 2 or less higher · ${tag(diff <= 2)}</td></tr>`);
       }
     }
-    if (comp.length) html += "<h2>Cell compared with the sunglasses</h2><table><tr><th>Screen</th><th>Cell's lowest reading</th></tr>" + comp.join("") + "</table>";
+    if (comp.length) {
+      html += `<h2>Cell compared with your sunglasses</h2>
+        <p>Real polarized sunglasses are the yardstick. On each color, the cell's least-light reading may be at most 2 points
+        higher than the sunglasses'. Example: sunglasses 3%, cell 4.5% is 1.5 higher, so PASS. Doing better than the sunglasses always passes.</p>
+        <table><tr><th>Screen</th><th>Least light through</th></tr>${comp.join("")}</table>`;
+    }
+    html += `<h2>What it means</h2><ul>
+      <li><b>All PASS:</b> with no power, the cell blocks screen glare about as well as polarized sunglasses. That's what this test is for.</li>
+      <li><b>If the sunglasses fail too,</b> the setup is the likely cause: room lights on, sensor not flat on the lens, or sunglasses that aren't polarized. Fix that and run again.</li>
+      <li><b>Dark sunglasses often fail "most light through".</b> That's fine: they're here as the yardstick for the cell.</li>
+      <li>A FAIL is a result, not a mistake.</li></ul>`;
+    if (practice) html += `<p><b>Practice done.</b> Press Back to the start screen, then Start full test when you're ready.</p>`;
   }
   $("resultBody").innerHTML = html;
+  $("copyNote").textContent = "";
   $("results").classList.remove("hidden");
 }
 
@@ -494,7 +685,7 @@ async function copyResults() {
   const text = $("csvOut").value;
   try { await navigator.clipboard.writeText(text); }
   catch (e) { $("csvOut").select(); document.execCommand("copy"); }
-  $("copyNote").textContent = "Copied.";
+  $("copyNote").textContent = "Copied. Now paste it in your chat with Claude.";
 }
 
 function saveCsv() {
@@ -511,9 +702,16 @@ function showSetupError(text) {
 }
 
 // ---------- controls ----------
+function start(practice) {
+  if (running) return;
+  document.activeElement.blur();
+  beep(880, 60);
+  runTest(practice);
+}
 $("btnConnect").onclick = () => connect(true);
 $("btnConnectAll").onclick = () => connect(false);
-$("btnStart").onclick = () => { if (running) return; document.activeElement.blur(); beep(880, 60); runTest(); };
+$("btnStart").onclick = () => start(false);
+$("btnPractice").onclick = () => start(true);
 $("btnGo").onclick = () => { goFlag = true; };
 $("btnPause").onclick = togglePause;
 $("btnSkip").onclick = () => { skipFlag = true; };
@@ -521,7 +719,11 @@ $("btnStop").onclick = () => { aborted = true; };
 $("btnCopy").onclick = copyResults;
 $("btnSave").onclick = saveCsv;
 $("btnAgain").onclick = () => { $("results").classList.add("hidden"); $("setup").classList.remove("hidden"); };
-$("btnLog").onclick = () => { const h = $("log").classList.toggle("hidden"); $("btnLog").textContent = h ? "Show log" : "Hide log"; drawDial(); };
+$("btnLog").onclick = () => {
+  const hidden = $("logArea").classList.toggle("hidden");
+  $("btnLog").textContent = hidden ? "Show board messages" : "Hide board messages";
+  drawDial();
+};
 $("btnSend").onclick = sendManual;
 $("manual").addEventListener("keydown", e => { if (e.key === "Enter") sendManual(); e.stopPropagation(); });
 
@@ -534,7 +736,7 @@ async function sendManual() {
 
 function togglePause() {
   paused = !paused;
-  $("btnPause").textContent = paused ? "Resume (P)" : "Pause (P)";
+  $("btnPause").textContent = paused ? "Carry on (P)" : "Pause (P)";
 }
 
 document.addEventListener("keydown", e => {

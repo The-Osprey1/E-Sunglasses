@@ -24,7 +24,9 @@ sunglasses lens) at each angle, as a percent of the light with nothing in the wa
 `Bench test runner.html` runs the whole test from Chrome or Edge, with no serial console
 to install. Open it in Chrome or Edge, click **Connect to board**, then **Start test**. It
 restarts `code.py`, sends every command, switches the screen between white, red and blue,
-draws an angle dial around the sensor spot, and beeps and shows what to do at each step.
+draws an angle dial around the sensor spot, and beeps and shows what to do (and why) at each
+step. Its start screen explains the test, shows how to hold the sensor and sample, and has a
+two-minute practice run (sunglasses on white only).
 At the end it shows pass or fail for each sweep (including the cell-versus-sunglasses
 check) and has a **Copy results** button for the CSV.
 
@@ -32,7 +34,7 @@ check) and has a **Copy results** button for the CSV.
 
 | Type | Does |
 |---|---|
-| `d` | Dark reading. Cover the sensor tube completely. This subtracts leftover room light. |
+| `d` | Zero reading. Press a fingertip over the sensor chip. This is what the sensor reads in total darkness, and it is taken off every reading. |
 | `r` | Reference. Sensor against the screen, nothing in the way. This counts as 100%. |
 | `s cell-white` | Sweep. The program asks for 0°, 15° … 180°. Rotate the sample to each angle and press Enter. Type `q` to stop early. |
 | `t` | Summary of all sweeps, with pass or fail. |
@@ -56,7 +58,7 @@ from it. Take a new reference (`r`) every time you change the screen color.
 
 ## Tips
 
-- Keep the sensor tube pressed flat against the screen and hold the sample flat over it.
+- Turn the room lights off. Hold the sample flat on the screen and press the sensor lightly on it, chip side down.
   Tilting the sample changes the result.
 - If you see a "saturated" warning, lower the screen brightness and take the reference again.
 - If the reference is weak, raise the screen brightness or darken the room.
