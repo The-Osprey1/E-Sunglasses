@@ -40,6 +40,8 @@
   button.primary { background: var(--accent); border-color: var(--accent); color: #05101f; font-weight: 600; }
   input[type=text], select { font: inherit; font-size: 15px; background: #0d0e10; color: var(--text);
     border: 1px solid #50545c; border-radius: 6px; padding: 6px 8px; }
+  #results { right: auto; width: 58%; min-width: 520px; }
+  body.results #lookHere { left: 79%; }
   .overlay { position: absolute; inset: 0; background: rgba(16,17,20,.97); overflow-y: auto; padding: 24px 32px 40px; box-sizing: border-box; }
   .overlay h1 { margin: 0 0 8px; font-size: 28px; }
   .overlay h2 { font-size: 19px; margin: 22px 0 6px; color: #fff; }
@@ -67,8 +69,8 @@
 <div id="top">
   <div id="topText">
     <div id="stepline">Test 2: the light valve with power on</div>
-    <div id="msg">Connect the board to begin</div>
-    <div id="sub">Press "Connect to board" below. In the pop-up, click the board (it may be called "USB Serial Device"), then click Connect.</div>
+    <div id="msg">Wire the valve first, then connect</div>
+    <div id="sub">Follow "1. Wire the valve" below with the USB cable unplugged. Then plug it in and press "Connect to board". In the pop-up, click the board (it may be called "USB Serial Device"), then Connect.</div>
     <div id="why"></div>
   </div>
   <div id="voltWrap"><div id="volt">off</div><div id="voltLabel">power to the valve</div></div>
@@ -82,43 +84,19 @@
     <h1>Test 2: the light valve with power on</h1>
     <div class="cols">
       <div>
-        <p><b>What this test checks.</b> With no power, the valve blocks glare (that was test 1). With some power, it
-          should let a screen's light through <b>about evenly at every angle</b>, so phones and laptops stay readable
-          through the glasses whichever way you tilt your head. We call that <b>screen mode</b>. This test finds the
-          voltage that gives it, by eye. It takes about 5 minutes.</p>
+        <p><b>What this test checks.</b> With no power, the valve blocks glare (that was test 1). The hope is that with
+          some power it lets a screen's light through <b>about evenly at every angle</b>, so phones and laptops stay
+          readable through the glasses whichever way you tilt your head. We call that <b>screen mode</b>. This test looks
+          for the voltage that gives it, by eye. Nobody knows yet whether this valve can do it, so "it can't" is a real,
+          useful answer too. It takes about 5 minutes.</p>
         <p><b>How it works.</b> The board sends the valve quick pulses that go one way, then the other way, a hundred
           times a second. Equal pulses both ways mean no steady current flows through the valve, which would slowly
           damage it. The slider on this page sets how strong the pulses are.</p>
 
-        <h2>What you need</h2>
-        <ul>
-          <li>The QT Py plugged into this laptop, with the test 2 program on it. To put it on, double-click
-            <b>Install to board.bat</b> in this folder once, and wait for it to say DONE.</li>
-          <li>The light valve you used in test 1 (one film peeled off), with its two wires connected to the board as in the
-            picture.</li>
-          <li>The light sensor isn't needed. It can stay plugged in.</li>
-        </ul>
-
-        <h2>Get ready</h2>
-        <ol>
-          <li>Set the screen brightness to full and turn Night light off.</li>
-          <li>Dim the room lights a little, so the screen is the brightest thing you see.</li>
-          <li>Press <kbd>F11</kbd> to make this page full screen.</li>
-        </ol>
-
-        <h2>Keys</h2>
-        <table class="keys">
-          <tr><td><kbd>→</kbd> <kbd>←</kbd></td><td>a little more or less power (0.05 volts)</td></tr>
-          <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>a bigger step (0.2 volts)</td></tr>
-          <tr><td><kbd>0</kbd></td><td>power off</td></tr>
-          <tr><td><kbd>M</kbd></td><td>mark this voltage as screen mode</td></tr>
-          <tr><td><kbd>Space</kbd></td><td>next step</td></tr>
-          <tr><td><kbd>Esc</kbd></td><td>power off and back to this screen</td></tr>
-        </table>
       </div>
 
       <div>
-        <h2 style="margin-top:0">Wiring</h2>
+        <h2 style="margin-top:0">1. Wire the valve</h2>
         <svg class="pic" viewBox="0 0 560 300" width="100%" style="max-width:560px" role="img"
              aria-label="The QT Py seen from the top with its USB socket at the top. One valve wire goes to the hole labelled A2, the other to the hole labelled A3, both on the left side of the board.">
           <rect x="20" y="70" width="140" height="140" rx="6" fill="#2bb3a3" opacity=".85"/>
@@ -152,12 +130,41 @@
         <ol>
           <li><b>Unplug the QT Py's USB cable</b> while you connect the wires.</li>
           <li>Connect one valve wire to the hole labelled <b>A2</b> and the other to <b>A3</b>. Either way round works.
-            Check the labels printed on the board.</li>
-          <li>Make sure the two bare wire ends don't touch each other or any other hole.</li>
+            Check the labels printed on the board. Best: solder them, or use jumper wires on header pins. Otherwise push
+            each bare end through its hole from opposite sides of the board, bend it over, and tape it down.</li>
+          <li>A2 and A3 are right next to each other, so check that the two bare ends (and any clips) don't touch each
+            other or any other hole.</li>
+          <li>Leave enough slack in the wires to turn the valve half a turn without pulling them.</li>
           <li>Plug the USB cable back in.</li>
         </ol>
         <p class="note">Why only A2 and A3: the board switches those two between pushing one way and the other. 3V, 5V and
           GND are always on, so they would push a steady current through the valve.</p>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h2>2. Put the test 2 program on the board</h2>
+        <p>With the board plugged in, double-click <b>Install to board.bat</b> in this folder and wait for it to say DONE.
+          You only need to do this once. The light sensor isn't used; it can stay plugged in.</p>
+
+        <h2>3. Get ready</h2>
+        <ol>
+          <li>Set the screen brightness to full and turn Night light off.</li>
+          <li>Dim the room lights a little, so the screen is the brightest thing you see.</li>
+          <li>Press <kbd>F11</kbd> to make this page full screen.</li>
+        </ol>
+      </div>
+      <div>
+        <h2>Keys</h2>
+        <table class="keys">
+          <tr><td><kbd>→</kbd> <kbd>←</kbd></td><td>a little more or less power (0.05 volts)</td></tr>
+          <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>a bigger step (0.2 volts)</td></tr>
+          <tr><td><kbd>0</kbd></td><td>power off</td></tr>
+          <tr><td><kbd>M</kbd></td><td>mark this voltage as screen mode</td></tr>
+          <tr><td><kbd>Space</kbd></td><td>next step</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>power off (during the steps it also goes back to this screen)</td></tr>
+        </table>
       </div>
     </div>
 
@@ -170,13 +177,19 @@
   </div>
 
   <div id="results" class="overlay hidden">
-    <h1>Results</h1>
+    <h1>Results: four quick questions</h1>
     <p id="resultMarks"></p>
-    <p>The valve is still at the voltage you marked, so you can look again while you answer.</p>
+    <p id="resultValve">The valve is at the voltage you marked. Look through it at the white area on the right while you
+      answer, turning it slowly through half a turn.</p>
     <div class="q"><b>Turning the valve at that voltage, the white area looks:</b><br>
       <label><input type="radio" name="even" value="the same at every angle"> the same at every angle</label>
       <label><input type="radio" name="even" value="almost the same"> almost the same</label>
       <label><input type="radio" name="even" value="still clearly darker at one angle"> still clearly darker at one angle</label>
+    </div>
+    <div class="q"><b>As you added power, the darkest angle:</b><br>
+      <label><input type="radio" name="slide" value="faded away"> faded away</label>
+      <label><input type="radio" name="slide" value="slid round to a new angle"> slid round to a new angle</label>
+      <label><input type="radio" name="slide" value="not sure"> not sure</label>
     </div>
     <div class="q"><b>Color tint through the valve:</b><br>
       <label><input type="radio" name="tint" value="none"> none</label>
@@ -200,7 +213,8 @@
       <button id="btnAgain">Power off and back to the start</button>
       <span id="copyNote" class="note" style="align-self:center"></span>
     </div>
-    <p><b>Next:</b> press Copy results, then paste it (<kbd>Ctrl</kbd>+<kbd>V</kbd>) in your chat with Claude.</p>
+    <p><b>Next:</b> press Copy results (this also turns the valve off), then paste it (<kbd>Ctrl</kbd>+<kbd>V</kbd>) in
+      your chat with Claude.</p>
   </div>
 </div>
 
@@ -231,12 +245,14 @@ const $ = id => document.getElementById(id);
 const ADAFRUIT_USB_VENDOR = 0x239A;
 const VMAX = 3.2;
 const PROMPT = /\n> $/;
+const RESULTS_OFF_MS = 3 * 60 * 1000;   // the results screen turns the valve off after this
 
 let port = null, reader = null, writer = null;
-let buf = "", cursor = 0, connected = false, started = false, phase = "setup";   // setup, steps, results
-let wantV = 0, setV = null, audio = null, wakeLock = null;
-let stepIdx = -1, fullChanged = null;
-const marks = [];   // {v, measured, hz}
+let buf = "", cursor = 0, connected = false;
+let phase = "setup";   // setup, steps, results, disconnected
+let wantV = 0, setV = null, audio = null, wakeLock = null, offTimer = null;
+let stepIdx = -1, fullOk = false, nothingPressed = false, boardDrive = "";
+const marks = [];   // voltages marked as screen mode
 
 // ---------- display ----------
 function say(step, msg, sub, why) {
@@ -259,7 +275,7 @@ function logText(s) {
   el.scrollTop = el.scrollHeight;
 }
 function showMarks() {
-  $("marks").textContent = marks.length ? "Marked: " + marks.map(m => m.v.toFixed(2) + " V").join(", ") : "";
+  $("marks").textContent = marks.length ? "Marked: " + marks.map(v => v.toFixed(2) + " V").join(", ") : "";
 }
 function beep(freq, ms) {
   try {
@@ -270,6 +286,15 @@ function beep(freq, ms) {
     g.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + ms / 1000);
     o.start(); o.stop(audio.currentTime + ms / 1000);
   } catch (e) { /* sound is optional */ }
+}
+function setPhase(p) {
+  phase = p;
+  document.body.classList.toggle("results", p === "results");
+  $("lookHere").classList.toggle("hidden", p !== "steps" && p !== "results");
+  const on = p === "steps";
+  for (const id of ["btnBack", "btnNext", "btnDown", "btnUp", "btnOff", "btnMark", "slider"]) $(id).disabled = !on;
+  if (on) $("btnBack").disabled = stepIdx <= 0;
+  if (!on && $("btnNothing")) $("btnNothing").remove();
 }
 
 // ---------- serial ----------
@@ -298,18 +323,17 @@ async function connect(useFilter) {
   readLoop();
   $("btnConnect").textContent = "Connecting...";
   $("btnConnect").disabled = $("btnConnectAll").disabled = true;
+  $("btnSend").disabled = false;
   try {
     await exclusive(restartProgram);
   } catch (e) {
     showSetupError(e.message);
     $("btnConnect").textContent = "Connected, but see the message below";
-    $("btnSend").disabled = false;
     return;
   }
   $("btnConnect").textContent = "Connected";
   $("btnStart").disabled = false;
-  $("btnSend").disabled = false;
-  say(null, "Board connected", "Read the start screen, wire the valve, then press Start the eye check.");
+  say(null, "Board connected", "Press Start the eye check.");
 }
 
 async function readLoop() {
@@ -322,7 +346,12 @@ async function readLoop() {
     }
   } catch (e) { /* port closed or unplugged */ }
   connected = false;
-  setControls(false);
+  wantV = 0; setV = null; showVolt();
+  clearTimeout(offTimer);
+  showHelp("");
+  setPhase("disconnected");
+  $("btnStart").disabled = true;
+  $("btnSend").disabled = true;
   say(null, "The board disconnected", "Plug it back in, press F5 to reload this page, and connect again.", "");
 }
 
@@ -371,19 +400,26 @@ async function restartProgram() {
   await send("\x03");          // stop the program (prints a harmless KeyboardInterrupt)
   await sleep(500);
   await send("\x04");          // reload code.py
-  await waitFor(/soft reboot/i, 8000, true);
-  const m = await waitFor(/Bench test (\d)/, 15000);
-  if (m[1] !== "2") {
-    throw new Error("The board still has the test " + m[1] + " program on it.\n" +
-      "Close this page, double-click \"Install to board.bat\" in the bench-test-2 folder, wait for DONE, then open this page again.");
+  let m = null;
+  try {
+    await waitFor(/soft reboot/i, 8000, true);
+    m = await waitFor(/Bench test (\d)/, 15000);
+    if (m[1] === "2") await waitFor(PROMPT, 8000);
+  } catch (e) { m = null; }
+  if (!m || m[1] !== "2") {
+    // Another program, an error before the first line, or silence: the test 2 program
+    // isn't on the board (or didn't start).
+    const said = buf.slice(-600).replace(/\r/g, "");
+    throw new Error("The board didn't start the test 2 program.\n" +
+      "Close this page, double-click \"Install to board.bat\" in the bench-test-2 folder, wait for DONE, then open this page again.\n" +
+      "If it still happens, copy this message to Claude.\n\nThe board said:\n" + said);
   }
-  await waitFor(PROMPT, 8000);
   setV = 0;
 }
 
 // ---------- voltage ----------
 function changeV(v) {
-  if (!started) return;
+  if (phase !== "steps" && phase !== "results") return;
   v = Math.round(Math.min(VMAX, Math.max(0, v)) * 20) / 20;
   wantV = v;
   showVolt();
@@ -404,29 +440,27 @@ async function pump() {
       setV = v;
     }
   } catch (e) {
-    say(null, "The board stopped answering", e.message, "Unplug the board, plug it back in, press F5 and connect again.");
+    if (connected) say(null, "The board stopped answering", e.message, "Unplug the board, plug it back in, press F5 and connect again.");
   }
   pumping = false;
 }
 async function settle() {
-  while (pumping || setV !== wantV) { await sleep(50); if (!connected) throw new Error("The board disconnected."); }
-}
-async function mark() {
-  if (phase !== "steps" || wantV === 0) return;
-  await settle();
-  await sleep(1300);   // let the board measure its own timing once
-  const m = await exclusive(async () => {
-    await command("v");
-    const r = await waitFor(/valve = ([\d.]+) V at ([\d.]+) Hz \(measured\)/, 3000);
-    await waitFor(PROMPT, 2000);
-    return r;
-  });
-  marks.push({ v: wantV, measured: parseFloat(m[1]), hz: parseFloat(m[2]) });
-  showMarks();
-  beep(1400, 60); await sleep(110); beep(1400, 60);
-  if (STEPS[stepIdx].id === "find") {
-    $("why").textContent = "Marked " + wantV.toFixed(2) + " V. Try a step either side to be sure, mark again if it's better, or press Next.";
+  const t0 = performance.now();
+  while (pumping || setV !== wantV) {
+    if (!connected) throw new Error("The board disconnected.");
+    if (!pumping) pump();
+    if (performance.now() - t0 > 8000) throw new Error("The board did not answer in time.");
+    await sleep(50);
   }
+}
+function mark() {
+  if (phase !== "steps" || STEPS[stepIdx].id !== "find") return;
+  if (wantV === 0) { $("marks").textContent = "Add some power first (→), then press M."; return; }
+  const v = wantV;
+  if (!marks.includes(v)) marks.push(v);
+  showMarks();
+  beep(1400, 60); setTimeout(() => beep(1400, 60), 110);
+  $("marks").textContent += "  (try a step either side, mark again if better, then Finish)";
 }
 
 // ---------- the guided steps ----------
@@ -439,14 +473,14 @@ const STEPS = [
   { id: "full", title: "Full power: check the wiring",
     enter() { changeV(VMAX); },
     msg: "Full power: the dark angle should turn light",
-    sub: "Keep the valve at the same angle. It should look much lighter now. Turn it a quarter turn: that angle is now the darker one.",
+    sub: "Keep the valve at the same angle. It should look much lighter now. Turn it slowly: the darkest angle has moved, about a quarter turn.",
     why: "If you see that, power is reaching the valve. If nothing changed, press \"Nothing changed\".",
     extra: "nothing" },
-  { id: "find", title: "Find screen mode",
+  { id: "find", title: "Look for screen mode",
     enter() { if (wantV === VMAX || wantV === 0) changeV(1.0); },
     msg: "Find the voltage where turning makes no difference",
-    sub: "Press → to add a little power, ← to take some away. After each step, turn the valve a quarter turn and back. When the brightness stays almost the same all the way round, press M.",
-    why: "That's screen mode. Below it the old dark angle is still dark; above it the dark angle has moved a quarter turn. Use ↑ and ↓ for bigger steps." },
+    sub: "Press → to add a little power, ← to take some away. After each step, turn the valve slowly through half a turn, watching the whole time, not just the start and end. When nothing gets darker or lighter anywhere in that half turn, press M.",
+    why: "Watch closely an eighth of a turn either side of the old dark angle: that's where unevenness hides. On some valves the dark angle never fades; it slides round as you add power. That's a real result too: mark the most even voltage you find. ↑ and ↓ make bigger steps." },
 ];
 
 function goStep(i) {
@@ -454,93 +488,111 @@ function goStep(i) {
   const s = STEPS[i];
   showHelp("");
   say(`Step ${i + 1} of ${STEPS.length + 1} · ${s.title}`, s.msg, s.sub, s.why);
+  if ($("btnNothing")) $("btnNothing").remove();
+  setPhase("steps");
   s.enter();
-  $("btnBack").disabled = i === 0;
   $("btnNext").textContent = i === STEPS.length - 1 ? "Finish (Space)" : (s.extra === "nothing" ? "It changed: next (Space)" : "Next (Space)");
-  $("btnNothing") && $("btnNothing").remove();
   if (s.extra === "nothing") {
     const b = document.createElement("button");
     b.id = "btnNothing"; b.textContent = "Nothing changed";
-    b.onclick = () => { fullChanged = false; showHelp(
-      "Unplug the USB cable and check: each valve wire touches bare metal at A2 and A3, nothing else touches them, " +
-      "and the two wires don't touch each other. Plug back in, press F5, and connect again. " +
-      "If the wires are fine, turn the valve over (other side toward the screen) and look again at full power."); };
+    b.onclick = () => { nothingPressed = true; showHelp(
+      "1) Turn the valve over, so the other side faces the screen, and look again: the page is still at full power. " +
+      "2) If still nothing, unplug the USB cable and check that each valve wire touches bare metal at A2 and A3 and the two " +
+      "don't touch each other. Plug back in, press F5, Connect, Start the eye check, then Next to get back to full power."); };
     $("btnNext").after(b);
   }
   beep(880, 60);
 }
 function next() {
   if (phase !== "steps") return;
-  if (STEPS[stepIdx].id === "full") fullChanged = true;
+  if (STEPS[stepIdx].id === "full") fullOk = true;
   if (stepIdx < STEPS.length - 1) goStep(stepIdx + 1);
   else finish();
 }
 function back() { if (phase === "steps" && stepIdx > 0) goStep(stepIdx - 1); }
 
 async function startCheck() {
+  if (!connected) return;
   document.activeElement.blur();
   $("setup").classList.add("hidden");
-  started = true;
-  phase = "steps";
-  fullChanged = null;
+  $("results").classList.add("hidden");
+  fullOk = nothingPressed = false;
+  boardDrive = "";
   marks.length = 0;
   showMarks();
-  setControls(true);
+  setV = null;   // always send the first setting, whatever was typed to the board before
   try { wakeLock = await navigator.wakeLock.request("screen"); } catch (e) { /* optional */ }
   goStep(0);
 }
 
-function finish() {
+async function finish() {
   if (!marks.length) {
     showHelp("Mark a voltage first: when turning the valve makes the least difference, press M. " +
       "If no voltage works, mark the one that comes closest.");
     return;
   }
   const last = marks[marks.length - 1];
-  changeV(last.v);
-  phase = "results";
-  setControls(false);
-  $("btnNothing") && $("btnNothing").remove();
-  say(`Step ${STEPS.length + 1} of ${STEPS.length + 1} · Results`, "Answer three quick questions", "", "");
-  $("resultMarks").innerHTML = "You marked <b>" + marks.map(m => m.v.toFixed(2) + " V").join(", ") + "</b>.";
+  setPhase("results");
+  changeV(last);
+  say(`Step ${STEPS.length + 1} of ${STEPS.length + 1} · Results`, "Answer four quick questions", "", "");
+  $("resultMarks").innerHTML = "You marked <b>" + marks.map(v => v.toFixed(2) + " V").join(", ") + "</b>.";
+  $("resultValve").textContent = "The valve is at " + last.toFixed(2) + " V. Look through it at the white area on the right " +
+    "while you answer, turning it slowly through half a turn.";
   $("results").classList.remove("hidden");
+  $("copyNote").textContent = "";
   updateResultText();
+  clearTimeout(offTimer);
+  offTimer = setTimeout(valveOff, RESULTS_OFF_MS);
+  try {   // what the board itself says it is doing, for the record
+    await settle();
+    await sleep(2500);   // let it time a full second at this setting
+    const m = await exclusive(async () => {
+      await command("v");
+      const r = await waitFor(/valve = ([\d.]+) V \(estimate\) at ([\d.]+) Hz \(measured\)/, 3000);
+      await waitFor(PROMPT, 2000);
+      return r;
+    });
+    if (phase === "results" && wantV === last) { boardDrive = `${m[1]} V at ${m[2]} Hz`; updateResultText(); }
+  } catch (e) { /* the copied text just leaves it out */ }
+}
+
+function valveOff() {
+  if (phase !== "results") return;
+  clearTimeout(offTimer);
+  changeV(0);
+  $("resultValve").textContent = "The valve is now off.";
 }
 
 function radio(name) { const r = document.querySelector(`input[name=${name}]:checked`); return r ? r.value : "(not answered)"; }
 function updateResultText() {
   const last = marks[marks.length - 1];
+  const wiring = nothingPressed ? "pressed \"Nothing changed\" at first, then carried on" : (fullOk ? "yes" : "(not checked)");
   const lines = [
     "Bench test 2 eye check (light valve with power on), " + new Date().toLocaleString(),
-    "Drive: three-level wave on A2 and A3 from the QT Py's 3.3 V",
-    "Full power changed the valve: " + (fullChanged === false ? "NO" : fullChanged ? "yes" : "(not checked)"),
-    "Screen mode marked at: " + marks.map(m => `${m.v.toFixed(2)} V (board measured ${m.measured.toFixed(2)} V at ${m.hz.toFixed(0)} Hz)`).join("; "),
-    "At " + (last ? last.v.toFixed(2) + " V" : "the mark") + ", turning the valve: " + radio("even"),
-    "Tint: " + radio("tint"),
-    "Flicker: " + radio("flicker"),
+    "Drive: three-level wave on A2 and A3 from the QT Py's 3.3 V, 100 Hz",
+    "Full power changed the valve: " + wiring,
+    "Screen mode marked at: " + marks.map(v => v.toFixed(2) + " V").join(", "),
   ];
+  if (boardDrive) lines.push("Board's own estimate at " + last.toFixed(2) + " V: " + boardDrive);
+  lines.push(
+    "At " + last.toFixed(2) + " V, turning the valve: " + radio("even"),
+    "As power was added, the darkest angle: " + radio("slide"),
+    "Tint: " + radio("tint"),
+    "Flicker: " + radio("flicker"));
   const n = $("notes").value.trim();
   if (n) lines.push("Notes: " + n);
   $("resultText").value = lines.join("\n");
 }
 
 async function stopAll() {
-  started = false;
-  phase = "setup";
-  setControls(false);
+  clearTimeout(offTimer);
   showHelp("");
   wantV = 0; showVolt(); pump();
+  setPhase(connected ? "setup" : "disconnected");
   if (wakeLock) { try { await wakeLock.release(); } catch (e) {} wakeLock = null; }
   $("results").classList.add("hidden");
   $("setup").classList.remove("hidden");
-  $("btnNothing") && $("btnNothing").remove();
-  say("Test 2: the light valve with power on", "Valve off", "Press Start the eye check to go again.");
-}
-
-function setControls(on) {
-  $("lookHere").classList.toggle("hidden", phase !== "steps");
-  for (const id of ["btnBack", "btnNext", "btnDown", "btnUp", "btnOff", "btnMark", "slider"]) $(id).disabled = !on;
-  if (on) $("btnBack").disabled = stepIdx <= 0;
+  if (connected) say("Test 2: the light valve with power on", "Valve off", "Press Start the eye check to go again.");
 }
 
 function showSetupError(text) {
@@ -554,13 +606,16 @@ async function copyResults() {
   const text = $("resultText").value;
   try { await navigator.clipboard.writeText(text); }
   catch (e) { $("resultText").select(); document.execCommand("copy"); }
-  $("copyNote").textContent = "Copied. Now paste it in your chat with Claude.";
+  valveOff();
+  $("copyNote").textContent = "Copied, and the valve is off. Now paste it in your chat with Claude.";
 }
 
 async function sendManual() {
   const v = $("manual").value;
-  if (!connected || started) return;
+  if (!connected) return;
+  if (phase !== "setup") { $("manual").placeholder = "Commands work only on the start screen"; return; }
   $("manual").value = "";
+  setV = null;
   await exclusive(() => send(v + "\r"));
 }
 
@@ -573,7 +628,7 @@ $("btnBack").onclick = back;
 $("btnDown").onclick = () => changeV(wantV - 0.05);
 $("btnUp").onclick = () => changeV(wantV + 0.05);
 $("btnOff").onclick = () => changeV(0);
-$("btnMark").onclick = () => mark().catch(e => say(null, "The board stopped answering", e.message, ""));
+$("btnMark").onclick = mark;
 $("slider").oninput = () => changeV(parseFloat($("slider").value));
 $("btnCopy").onclick = copyResults;
 $("btnAgain").onclick = stopAll;
@@ -583,11 +638,15 @@ $("btnLog").onclick = () => {
   $("btnLog").textContent = hidden ? "Show board messages" : "Hide board messages";
 };
 $("btnSend").onclick = sendManual;
-$("manual").addEventListener("keydown", e => { if (e.key === "Enter") sendManual(); e.stopPropagation(); });
+$("manual").addEventListener("keydown", e => { if (e.key === "Enter") sendManual(); if (e.key !== "Escape") e.stopPropagation(); });
 $("notes").addEventListener("keydown", e => { if (e.key !== "Escape") e.stopPropagation(); });
 
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape") { if (phase !== "setup") stopAll(); return; }
+  if (e.key === "Escape") {
+    if (phase === "steps") stopAll();
+    else if (phase === "results") valveOff();   // keep the answers on screen
+    return;
+  }
   if (phase !== "steps") return;
   const k = e.key;
   if (k === "ArrowRight") { e.preventDefault(); changeV(wantV + 0.05); }
@@ -595,7 +654,7 @@ document.addEventListener("keydown", e => {
   else if (k === "ArrowUp") { e.preventDefault(); changeV(wantV + 0.2); }
   else if (k === "ArrowDown") { e.preventDefault(); changeV(wantV - 0.2); }
   else if (k === "0") changeV(0);
-  else if (k === "m" || k === "M") mark().catch(err => say(null, "The board stopped answering", err.message, ""));
+  else if (k === "m" || k === "M") mark();
   else if (e.code === "Space") { e.preventDefault(); document.activeElement.blur(); next(); }
 });
 
