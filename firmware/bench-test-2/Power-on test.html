@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bench Test 2 Runner</title>
+<style>
+  :root {
+    --bar: #1d1f23; --bar2: #26292f; --text: #f2f2f2; --muted: #a9adb4;
+    --accent: #4c9aff; --warn: #ffb020; --bad: #ff6b6b; --good: #3ccf7a;
+  }
+  html, body { margin: 0; height: 100%; background: #000; color: var(--text);
+    font-family: "Segoe UI", system-ui, sans-serif; }
+  body { display: flex; flex-direction: column; }
+  #top { background: var(--bar); padding: 10px 18px; min-height: 128px; box-sizing: border-box; display: flex; gap: 18px; }
+  #topText { flex: 1; min-width: 0; }
+  #stepline { font-size: 14px; color: var(--muted); }
+  #msg { font-size: 30px; font-weight: 600; line-height: 1.2; }
+  #sub { font-size: 18px; color: #dfe2e6; margin-top: 4px; }
+  #why { font-size: 15px; color: var(--muted); margin-top: 4px; font-style: italic; }
+  #voltWrap { text-align: right; min-width: 170px; align-self: center; }
+  #volt { font-size: 48px; font-weight: 700; color: var(--accent); line-height: 1; }
+  #voltLabel { font-size: 13px; color: var(--muted); }
+  #panel { flex: 1; position: relative; background: #fff; overflow: hidden; }
+  #lookHere { position: absolute; left: 50%; top: 50%; width: 220px; height: 220px; margin: -110px 0 0 -110px;
+    border: 2px dashed rgba(0,0,0,.25); border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    color: rgba(0,0,0,.4); font-size: 15px; text-align: center; }
+  #bottom { background: var(--bar); padding: 8px 18px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  #bottom .grow { flex: 1; }
+  #slider { width: 260px; accent-color: var(--accent); }
+  #marks { color: var(--muted); font-size: 14px; }
+  #logArea { background: #0d0e10; }
+  #logHead { display: flex; gap: 8px; align-items: center; padding: 6px 18px 0; color: var(--muted); font-size: 13px; }
+  #log { color: #cfd3d8; font: 12px/1.35 Consolas, monospace; height: 110px;
+    overflow-y: auto; white-space: pre-wrap; padding: 6px 18px; margin: 0; }
+  button { font: inherit; font-size: 15px; padding: 8px 14px; border-radius: 6px; border: 1px solid #50545c;
+    background: var(--bar2); color: var(--text); cursor: pointer; }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:disabled { opacity: .45; cursor: default; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #05101f; font-weight: 600; }
+  input[type=text], select { font: inherit; font-size: 15px; background: #0d0e10; color: var(--text);
+    border: 1px solid #50545c; border-radius: 6px; padding: 6px 8px; }
+  .overlay { position: absolute; inset: 0; background: rgba(16,17,20,.97); overflow-y: auto; padding: 24px 32px 40px; box-sizing: border-box; }
+  .overlay h1 { margin: 0 0 8px; font-size: 28px; }
+  .overlay h2 { font-size: 19px; margin: 22px 0 6px; color: #fff; }
+  .overlay p, .overlay li { font-size: 16px; line-height: 1.5; color: #dfe2e6; }
+  .overlay li { margin-bottom: 6px; }
+  .overlay ol, .overlay ul { padding-left: 22px; margin: 4px 0; }
+  .cols { display: flex; gap: 40px; flex-wrap: wrap; }
+  .cols > div { flex: 1 1 420px; min-width: 0; }
+  .note { color: var(--muted); }
+  .errbox { border-left: 4px solid var(--bad); padding: 6px 12px; background: #2c1a1a; white-space: pre-wrap; font-family: Consolas, monospace; font-size: 13px; }
+  .keys td { padding: 3px 12px 3px 0; font-size: 15px; }
+  textarea { width: 100%; height: 170px; background: #0d0e10; color: #cfd3d8; border: 1px solid #50545c;
+    border-radius: 6px; font: 13px Consolas, monospace; box-sizing: border-box; }
+  .hidden { display: none !important; }
+  kbd { background: #33363c; border-radius: 4px; padding: 1px 6px; font-size: 14px; }
+  .btnrow { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+  .q { margin: 10px 0; font-size: 16px; }
+  .q label { margin-right: 18px; white-space: nowrap; }
+  #helpBox { position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); max-width: 640px; width: calc(100% - 48px);
+    background: rgba(16,17,20,.95); border-left: 4px solid var(--warn); border-radius: 6px; padding: 10px 16px; font-size: 16px; line-height: 1.45; }
+  svg.pic text { font-family: "Segoe UI", system-ui, sans-serif; }
+</style>
+</head>
+<body>
+<div id="top">
+  <div id="topText">
+    <div id="stepline">Test 2: the light valve with power on</div>
+    <div id="msg">Connect the board to begin</div>
+    <div id="sub">Press "Connect to board" below. In the pop-up, click the board (it may be called "USB Serial Device"), then click Connect.</div>
+    <div id="why"></div>
+  </div>
+  <div id="voltWrap"><div id="volt">off</div><div id="voltLabel">power to the valve</div></div>
+</div>
+
+<div id="panel">
+  <div id="lookHere" class="hidden">Look at this<br>white area<br>through the valve</div>
+  <div id="helpBox" class="hidden"></div>
+
+  <div id="setup" class="overlay">
+    <h1>Test 2: the light valve with power on</h1>
+    <div class="cols">
+      <div>
+        <p><b>What this test checks.</b> With no power, the valve blocks glare (that was test 1). With some power, it
+          should let a screen's light through <b>about evenly at every angle</b>, so phones and laptops stay readable
+          through the glasses whichever way you tilt your head. We call that <b>screen mode</b>. This test finds the
+          voltage that gives it, by eye. It takes about 5 minutes.</p>
+        <p><b>How it works.</b> The board sends the valve quick pulses that go one way, then the other way, a hundred
+          times a second. Equal pulses both ways mean no steady current flows through the valve, which would slowly
+          damage it. The slider on this page sets how strong the pulses are.</p>
+
+        <h2>What you need</h2>
+        <ul>
+          <li>The QT Py plugged into this laptop, with the test 2 program on it. To put it on, double-click
+            <b>Install to board.bat</b> in this folder once, and wait for it to say DONE.</li>
+          <li>The light valve you used in test 1 (one film peeled off), with its two wires connected to the board as in the
+            picture.</li>
+          <li>The light sensor isn't needed. It can stay plugged in.</li>
+        </ul>
+
+        <h2>Get ready</h2>
+        <ol>
+          <li>Set the screen brightness to full and turn Night light off.</li>
+          <li>Dim the room lights a little, so the screen is the brightest thing you see.</li>
+          <li>Press <kbd>F11</kbd> to make this page full screen.</li>
+        </ol>
+
+        <h2>Keys</h2>
+        <table class="keys">
+          <tr><td><kbd>→</kbd> <kbd>←</kbd></td><td>a little more or less power (0.05 volts)</td></tr>
+          <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>a bigger step (0.2 volts)</td></tr>
+          <tr><td><kbd>0</kbd></td><td>power off</td></tr>
+          <tr><td><kbd>M</kbd></td><td>mark this voltage as screen mode</td></tr>
+          <tr><td><kbd>Space</kbd></td><td>next step</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>power off and back to this screen</td></tr>
+        </table>
+      </div>
+
+      <div>
+        <h2 style="margin-top:0">Wiring</h2>
+        <svg class="pic" viewBox="0 0 560 300" width="100%" style="max-width:560px" role="img"
+             aria-label="The QT Py seen from the top with its USB socket at the top. One valve wire goes to the hole labelled A2, the other to the hole labelled A3, both on the left side of the board.">
+          <rect x="20" y="70" width="140" height="140" rx="6" fill="#2bb3a3" opacity=".85"/>
+          <text x="90" y="145" fill="#05101f" font-size="15" text-anchor="middle" font-weight="600">light valve</text>
+          <text x="20" y="232" fill="#dfe2e6" font-size="14">either wire to either hole</text>
+          <text x="20" y="252" fill="#ffb020" font-size="14">never to 3V, 5V or GND</text>
+          <path d="M160 120 C215 120 230 129 321 129" stroke="#ff6b6b" stroke-width="4" fill="none"/>
+          <path d="M160 160 C215 160 230 156 321 156" stroke="#f2f2f2" stroke-width="4" fill="none"/>
+          <rect x="310" y="40" width="160" height="210" rx="12" fill="#1f5fbf"/>
+          <rect x="360" y="22" width="60" height="30" rx="6" fill="#c8ccd2"/>
+          <text x="390" y="16" fill="#a9adb4" font-size="13" text-anchor="middle">USB socket</text>
+          <g font-size="14" fill="#fff">
+            <circle cx="328" cy="75" r="7" fill="#d9b44a"/><text x="340" y="80">A0</text>
+            <circle cx="328" cy="102" r="7" fill="#d9b44a"/><text x="340" y="107">A1</text>
+            <circle cx="328" cy="129" r="9" fill="#ff6b6b"/><text x="342" y="134" font-weight="700">A2</text>
+            <circle cx="328" cy="156" r="9" fill="#ff6b6b"/><text x="342" y="161" font-weight="700">A3</text>
+            <circle cx="328" cy="183" r="7" fill="#d9b44a"/><text x="340" y="188">SDA</text>
+            <circle cx="328" cy="210" r="7" fill="#d9b44a"/><text x="340" y="215">SCL</text>
+            <circle cx="328" cy="237" r="7" fill="#d9b44a"/><text x="340" y="242">TX</text>
+            <circle cx="452" cy="75" r="7" fill="#d9b44a"/><text x="440" y="80" text-anchor="end">5V</text>
+            <circle cx="452" cy="102" r="7" fill="#d9b44a"/><text x="440" y="107" text-anchor="end">GND</text>
+            <circle cx="452" cy="129" r="7" fill="#d9b44a"/><text x="440" y="134" text-anchor="end">3V</text>
+            <circle cx="452" cy="156" r="7" fill="#d9b44a"/><text x="440" y="161" text-anchor="end">MO</text>
+            <circle cx="452" cy="183" r="7" fill="#d9b44a"/><text x="440" y="188" text-anchor="end">MI</text>
+            <circle cx="452" cy="210" r="7" fill="#d9b44a"/><text x="440" y="215" text-anchor="end">SCK</text>
+            <circle cx="452" cy="237" r="7" fill="#d9b44a"/><text x="440" y="242" text-anchor="end">RX</text>
+          </g>
+          <text x="310" y="278" fill="#a9adb4" font-size="13">QT Py from the top. The labels are</text>
+          <text x="310" y="294" fill="#a9adb4" font-size="13">printed on the board by each hole.</text>
+        </svg>
+        <ol>
+          <li><b>Unplug the QT Py's USB cable</b> while you connect the wires.</li>
+          <li>Connect one valve wire to the hole labelled <b>A2</b> and the other to <b>A3</b>. Either way round works.
+            Check the labels printed on the board.</li>
+          <li>Make sure the two bare wire ends don't touch each other or any other hole.</li>
+          <li>Plug the USB cable back in.</li>
+        </ol>
+        <p class="note">Why only A2 and A3: the board switches those two between pushing one way and the other. 3V, 5V and
+          GND are always on, so they would push a steady current through the valve.</p>
+      </div>
+    </div>
+
+    <div id="setupErr"></div>
+    <div class="btnrow">
+      <button class="primary" id="btnConnect">Connect to board</button>
+      <button id="btnConnectAll">Board not in the pop-up? Try this</button>
+      <button class="primary" id="btnStart" disabled>Start the eye check</button>
+    </div>
+  </div>
+
+  <div id="results" class="overlay hidden">
+    <h1>Results</h1>
+    <p id="resultMarks"></p>
+    <p>The valve is still at the voltage you marked, so you can look again while you answer.</p>
+    <div class="q"><b>Turning the valve at that voltage, the white area looks:</b><br>
+      <label><input type="radio" name="even" value="the same at every angle"> the same at every angle</label>
+      <label><input type="radio" name="even" value="almost the same"> almost the same</label>
+      <label><input type="radio" name="even" value="still clearly darker at one angle"> still clearly darker at one angle</label>
+    </div>
+    <div class="q"><b>Color tint through the valve:</b><br>
+      <label><input type="radio" name="tint" value="none"> none</label>
+      <label><input type="radio" name="tint" value="yellowish"> yellowish</label>
+      <label><input type="radio" name="tint" value="bluish"> bluish</label>
+      <label><input type="radio" name="tint" value="purplish"> purplish</label>
+      <label><input type="radio" name="tint" value="other (see notes)"> other</label>
+    </div>
+    <div class="q"><b>Flicker or shimmer:</b><br>
+      <label><input type="radio" name="flicker" value="none"> none</label>
+      <label><input type="radio" name="flicker" value="a little"> a little</label>
+      <label><input type="radio" name="flicker" value="clearly"> clearly</label>
+    </div>
+    <div class="q"><b>Anything else you noticed</b> (optional):<br>
+      <input type="text" id="notes" size="70" placeholder="for example: looks a bit darker overall">
+    </div>
+    <h2>What gets copied</h2>
+    <textarea id="resultText" readonly></textarea>
+    <div class="btnrow">
+      <button class="primary" id="btnCopy">Copy results</button>
+      <button id="btnAgain">Power off and back to the start</button>
+      <span id="copyNote" class="note" style="align-self:center"></span>
+    </div>
+    <p><b>Next:</b> press Copy results, then paste it (<kbd>Ctrl</kbd>+<kbd>V</kbd>) in your chat with Claude.</p>
+  </div>
+</div>
+
+<div id="bottom">
+  <button id="btnBack" disabled>Back</button>
+  <button class="primary" id="btnNext" disabled>Next (Space)</button>
+  <span class="grow"></span>
+  <button id="btnDown" disabled title="Left arrow">−</button>
+  <input type="range" id="slider" min="0" max="3.2" step="0.05" value="0" disabled>
+  <button id="btnUp" disabled title="Right arrow">+</button>
+  <button id="btnOff" disabled>Off (0)</button>
+  <button id="btnMark" disabled>Mark this voltage (M)</button>
+  <span id="marks"></span>
+  <span class="grow"></span>
+  <button id="btnLog">Show board messages</button>
+</div>
+<div id="logArea" class="hidden">
+  <div id="logHead">Board messages (for fixing problems)
+    <input type="text" id="manual" placeholder="Type a command for the board" size="28">
+    <button id="btnSend" disabled>Send</button>
+  </div>
+  <pre id="log"></pre>
+</div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const ADAFRUIT_USB_VENDOR = 0x239A;
+const VMAX = 3.2;
+const PROMPT = /\n> $/;
+
+let port = null, reader = null, writer = null;
+let buf = "", cursor = 0, connected = false, started = false, phase = "setup";   // setup, steps, results
+let wantV = 0, setV = null, audio = null, wakeLock = null;
+let stepIdx = -1, fullChanged = null;
+const marks = [];   // {v, measured, hz}
+
+// ---------- display ----------
+function say(step, msg, sub, why) {
+  if (step !== null) $("stepline").textContent = step;
+  $("msg").textContent = msg;
+  $("sub").textContent = sub || "";
+  $("why").textContent = why || "";
+}
+function showVolt() {
+  $("volt").textContent = wantV === 0 ? "off" : wantV.toFixed(2) + " V";
+  $("slider").value = wantV;
+}
+function showHelp(text) {
+  $("helpBox").classList.toggle("hidden", !text);
+  $("helpBox").textContent = text || "";
+}
+function logText(s) {
+  const el = $("log");
+  el.textContent = (el.textContent + s.replace(/\r/g, "")).slice(-60000);
+  el.scrollTop = el.scrollHeight;
+}
+function showMarks() {
+  $("marks").textContent = marks.length ? "Marked: " + marks.map(m => m.v.toFixed(2) + " V").join(", ") : "";
+}
+function beep(freq, ms) {
+  try {
+    if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.frequency.value = freq; o.connect(g); g.connect(audio.destination);
+    g.gain.setValueAtTime(0.2, audio.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + ms / 1000);
+    o.start(); o.stop(audio.currentTime + ms / 1000);
+  } catch (e) { /* sound is optional */ }
+}
+
+// ---------- serial ----------
+async function connect(useFilter) {
+  $("setupErr").innerHTML = "";
+  if (!("serial" in navigator)) {
+    showSetupError("This browser can't talk to the board. Close this tab, then right-click the file > Open with > Google Chrome (or Microsoft Edge).");
+    return;
+  }
+  try {
+    port = await navigator.serial.requestPort(useFilter ? { filters: [{ usbVendorId: ADAFRUIT_USB_VENDOR }] } : {});
+    await port.open({ baudRate: 115200 });
+  } catch (e) {
+    if (e.name === "NotFoundError") return;   // pop-up closed without picking
+    showSetupError("Could not open the board: " + e.message +
+      "\nIf another program (Thonny, Mu, a serial monitor, or the test 1 page) has it open, close it. Or unplug the board, plug it back in, press F5, and connect again.");
+    return;
+  }
+  const dec = new TextDecoderStream();
+  port.readable.pipeTo(dec.writable).catch(() => {});
+  reader = dec.readable.getReader();
+  const enc = new TextEncoderStream();
+  enc.readable.pipeTo(port.writable).catch(() => {});
+  writer = enc.writable.getWriter();
+  connected = true;
+  readLoop();
+  $("btnConnect").textContent = "Connecting...";
+  $("btnConnect").disabled = $("btnConnectAll").disabled = true;
+  try {
+    await exclusive(restartProgram);
+  } catch (e) {
+    showSetupError(e.message);
+    $("btnConnect").textContent = "Connected, but see the message below";
+    $("btnSend").disabled = false;
+    return;
+  }
+  $("btnConnect").textContent = "Connected";
+  $("btnStart").disabled = false;
+  $("btnSend").disabled = false;
+  say(null, "Board connected", "Read the start screen, wire the valve, then press Start the eye check.");
+}
+
+async function readLoop() {
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += value;
+      logText(value);
+    }
+  } catch (e) { /* port closed or unplugged */ }
+  connected = false;
+  setControls(false);
+  say(null, "The board disconnected", "Plug it back in, press F5 to reload this page, and connect again.", "");
+}
+
+async function send(s) {
+  if (!connected) throw new Error("The board is not connected.");
+  await writer.write(s);
+}
+async function command(line) {
+  cursor = buf.length;
+  await send(line + "\r");
+}
+function waitFor(re, ms, ignoreErrors) {
+  return new Promise((resolve, reject) => {
+    const t0 = performance.now();
+    const iv = setInterval(() => {
+      const rest = buf.slice(cursor);
+      const m = rest.match(re);
+      if (m) {
+        clearInterval(iv);
+        cursor += m.index + m[0].length;
+        resolve(m);
+      } else if (!ignoreErrors && rest.includes("Traceback")) {
+        clearInterval(iv);
+        setTimeout(() => reject(new Error("The board reported an error:\n" + buf.slice(cursor).slice(rest.indexOf("Traceback")))), 600);
+      } else if (!connected) {
+        clearInterval(iv); reject(new Error("The board disconnected."));
+      } else if (performance.now() - t0 > ms) {
+        clearInterval(iv); reject(new Error("The board did not answer in time."));
+      }
+    }, 40);
+  });
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// One conversation with the board at a time.
+let chain = Promise.resolve();
+function exclusive(fn) {
+  const p = chain.then(fn);
+  chain = p.catch(() => {});
+  return p;
+}
+
+async function restartProgram() {
+  say("Starting", "Restarting the test program on the board", "It takes a few seconds.", "");
+  cursor = buf.length;
+  await send("\x03");          // stop the program (prints a harmless KeyboardInterrupt)
+  await sleep(500);
+  await send("\x04");          // reload code.py
+  await waitFor(/soft reboot/i, 8000, true);
+  const m = await waitFor(/Bench test (\d)/, 15000);
+  if (m[1] !== "2") {
+    throw new Error("The board still has the test " + m[1] + " program on it.\n" +
+      "Close this page, double-click \"Install to board.bat\" in the bench-test-2 folder, wait for DONE, then open this page again.");
+  }
+  await waitFor(PROMPT, 8000);
+  setV = 0;
+}
+
+// ---------- voltage ----------
+function changeV(v) {
+  if (!started) return;
+  v = Math.round(Math.min(VMAX, Math.max(0, v)) * 20) / 20;
+  wantV = v;
+  showVolt();
+  pump();
+}
+let pumping = false;
+async function pump() {
+  if (pumping) return;
+  pumping = true;
+  try {
+    while (connected && setV !== wantV) {
+      const v = wantV;
+      await exclusive(async () => {
+        await command("v " + v.toFixed(2));
+        await waitFor(/valve = [\d.]+ V at \d+ Hz/, 3000);
+        await waitFor(PROMPT, 2000);
+      });
+      setV = v;
+    }
+  } catch (e) {
+    say(null, "The board stopped answering", e.message, "Unplug the board, plug it back in, press F5 and connect again.");
+  }
+  pumping = false;
+}
+async function settle() {
+  while (pumping || setV !== wantV) { await sleep(50); if (!connected) throw new Error("The board disconnected."); }
+}
+async function mark() {
+  if (phase !== "steps" || wantV === 0) return;
+  await settle();
+  await sleep(1300);   // let the board measure its own timing once
+  const m = await exclusive(async () => {
+    await command("v");
+    const r = await waitFor(/valve = ([\d.]+) V at ([\d.]+) Hz \(measured\)/, 3000);
+    await waitFor(PROMPT, 2000);
+    return r;
+  });
+  marks.push({ v: wantV, measured: parseFloat(m[1]), hz: parseFloat(m[2]) });
+  showMarks();
+  beep(1400, 60); await sleep(110); beep(1400, 60);
+  if (STEPS[stepIdx].id === "find") {
+    $("why").textContent = "Marked " + wantV.toFixed(2) + " V. Try a step either side to be sure, mark again if it's better, or press Next.";
+  }
+}
+
+// ---------- the guided steps ----------
+const STEPS = [
+  { id: "off", title: "Valve off: find the dark angle",
+    enter() { changeV(0); },
+    msg: "The valve is off. Find its dark angle.",
+    sub: "Hold the valve about a hand's width in front of the white area, peeled side toward the screen. Look through it and turn it slowly. Stop where it looks darkest.",
+    why: "This is glare-cut, the same as test 1: with no power, the valve blocks the screen's light at one angle." },
+  { id: "full", title: "Full power: check the wiring",
+    enter() { changeV(VMAX); },
+    msg: "Full power: the dark angle should turn light",
+    sub: "Keep the valve at the same angle. It should look much lighter now. Turn it a quarter turn: that angle is now the darker one.",
+    why: "If you see that, power is reaching the valve. If nothing changed, press \"Nothing changed\".",
+    extra: "nothing" },
+  { id: "find", title: "Find screen mode",
+    enter() { if (wantV === VMAX || wantV === 0) changeV(1.0); },
+    msg: "Find the voltage where turning makes no difference",
+    sub: "Press → to add a little power, ← to take some away. After each step, turn the valve a quarter turn and back. When the brightness stays almost the same all the way round, press M.",
+    why: "That's screen mode. Below it the old dark angle is still dark; above it the dark angle has moved a quarter turn. Use ↑ and ↓ for bigger steps." },
+];
+
+function goStep(i) {
+  stepIdx = i;
+  const s = STEPS[i];
+  showHelp("");
+  say(`Step ${i + 1} of ${STEPS.length + 1} · ${s.title}`, s.msg, s.sub, s.why);
+  s.enter();
+  $("btnBack").disabled = i === 0;
+  $("btnNext").textContent = i === STEPS.length - 1 ? "Finish (Space)" : (s.extra === "nothing" ? "It changed: next (Space)" : "Next (Space)");
+  $("btnNothing") && $("btnNothing").remove();
+  if (s.extra === "nothing") {
+    const b = document.createElement("button");
+    b.id = "btnNothing"; b.textContent = "Nothing changed";
+    b.onclick = () => { fullChanged = false; showHelp(
+      "Unplug the USB cable and check: each valve wire touches bare metal at A2 and A3, nothing else touches them, " +
+      "and the two wires don't touch each other. Plug back in, press F5, and connect again. " +
+      "If the wires are fine, turn the valve over (other side toward the screen) and look again at full power."); };
+    $("btnNext").after(b);
+  }
+  beep(880, 60);
+}
+function next() {
+  if (phase !== "steps") return;
+  if (STEPS[stepIdx].id === "full") fullChanged = true;
+  if (stepIdx < STEPS.length - 1) goStep(stepIdx + 1);
+  else finish();
+}
+function back() { if (phase === "steps" && stepIdx > 0) goStep(stepIdx - 1); }
+
+async function startCheck() {
+  document.activeElement.blur();
+  $("setup").classList.add("hidden");
+  started = true;
+  phase = "steps";
+  fullChanged = null;
+  marks.length = 0;
+  showMarks();
+  setControls(true);
+  try { wakeLock = await navigator.wakeLock.request("screen"); } catch (e) { /* optional */ }
+  goStep(0);
+}
+
+function finish() {
+  if (!marks.length) {
+    showHelp("Mark a voltage first: when turning the valve makes the least difference, press M. " +
+      "If no voltage works, mark the one that comes closest.");
+    return;
+  }
+  const last = marks[marks.length - 1];
+  changeV(last.v);
+  phase = "results";
+  setControls(false);
+  $("btnNothing") && $("btnNothing").remove();
+  say(`Step ${STEPS.length + 1} of ${STEPS.length + 1} · Results`, "Answer three quick questions", "", "");
+  $("resultMarks").innerHTML = "You marked <b>" + marks.map(m => m.v.toFixed(2) + " V").join(", ") + "</b>.";
+  $("results").classList.remove("hidden");
+  updateResultText();
+}
+
+function radio(name) { const r = document.querySelector(`input[name=${name}]:checked`); return r ? r.value : "(not answered)"; }
+function updateResultText() {
+  const last = marks[marks.length - 1];
+  const lines = [
+    "Bench test 2 eye check (light valve with power on), " + new Date().toLocaleString(),
+    "Drive: three-level wave on A2 and A3 from the QT Py's 3.3 V",
+    "Full power changed the valve: " + (fullChanged === false ? "NO" : fullChanged ? "yes" : "(not checked)"),
+    "Screen mode marked at: " + marks.map(m => `${m.v.toFixed(2)} V (board measured ${m.measured.toFixed(2)} V at ${m.hz.toFixed(0)} Hz)`).join("; "),
+    "At " + (last ? last.v.toFixed(2) + " V" : "the mark") + ", turning the valve: " + radio("even"),
+    "Tint: " + radio("tint"),
+    "Flicker: " + radio("flicker"),
+  ];
+  const n = $("notes").value.trim();
+  if (n) lines.push("Notes: " + n);
+  $("resultText").value = lines.join("\n");
+}
+
+async function stopAll() {
+  started = false;
+  phase = "setup";
+  setControls(false);
+  showHelp("");
+  wantV = 0; showVolt(); pump();
+  if (wakeLock) { try { await wakeLock.release(); } catch (e) {} wakeLock = null; }
+  $("results").classList.add("hidden");
+  $("setup").classList.remove("hidden");
+  $("btnNothing") && $("btnNothing").remove();
+  say("Test 2: the light valve with power on", "Valve off", "Press Start the eye check to go again.");
+}
+
+function setControls(on) {
+  $("lookHere").classList.toggle("hidden", phase !== "steps");
+  for (const id of ["btnBack", "btnNext", "btnDown", "btnUp", "btnOff", "btnMark", "slider"]) $(id).disabled = !on;
+  if (on) $("btnBack").disabled = stepIdx <= 0;
+}
+
+function showSetupError(text) {
+  $("setupErr").innerHTML = "";
+  const d = document.createElement("div"); d.className = "errbox"; d.textContent = text;
+  $("setupErr").appendChild(d);
+}
+
+async function copyResults() {
+  updateResultText();
+  const text = $("resultText").value;
+  try { await navigator.clipboard.writeText(text); }
+  catch (e) { $("resultText").select(); document.execCommand("copy"); }
+  $("copyNote").textContent = "Copied. Now paste it in your chat with Claude.";
+}
+
+async function sendManual() {
+  const v = $("manual").value;
+  if (!connected || started) return;
+  $("manual").value = "";
+  await exclusive(() => send(v + "\r"));
+}
+
+// ---------- controls ----------
+$("btnConnect").onclick = () => connect(true);
+$("btnConnectAll").onclick = () => connect(false);
+$("btnStart").onclick = startCheck;
+$("btnNext").onclick = next;
+$("btnBack").onclick = back;
+$("btnDown").onclick = () => changeV(wantV - 0.05);
+$("btnUp").onclick = () => changeV(wantV + 0.05);
+$("btnOff").onclick = () => changeV(0);
+$("btnMark").onclick = () => mark().catch(e => say(null, "The board stopped answering", e.message, ""));
+$("slider").oninput = () => changeV(parseFloat($("slider").value));
+$("btnCopy").onclick = copyResults;
+$("btnAgain").onclick = stopAll;
+for (const el of document.querySelectorAll("#results input")) el.addEventListener("input", updateResultText);
+$("btnLog").onclick = () => {
+  const hidden = $("logArea").classList.toggle("hidden");
+  $("btnLog").textContent = hidden ? "Show board messages" : "Hide board messages";
+};
+$("btnSend").onclick = sendManual;
+$("manual").addEventListener("keydown", e => { if (e.key === "Enter") sendManual(); e.stopPropagation(); });
+$("notes").addEventListener("keydown", e => { if (e.key !== "Escape") e.stopPropagation(); });
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") { if (phase !== "setup") stopAll(); return; }
+  if (phase !== "steps") return;
+  const k = e.key;
+  if (k === "ArrowRight") { e.preventDefault(); changeV(wantV + 0.05); }
+  else if (k === "ArrowLeft") { e.preventDefault(); changeV(wantV - 0.05); }
+  else if (k === "ArrowUp") { e.preventDefault(); changeV(wantV + 0.2); }
+  else if (k === "ArrowDown") { e.preventDefault(); changeV(wantV - 0.2); }
+  else if (k === "0") changeV(0);
+  else if (k === "m" || k === "M") mark().catch(err => say(null, "The board stopped answering", err.message, ""));
+  else if (e.code === "Space") { e.preventDefault(); document.activeElement.blur(); next(); }
+});
+
+// Best effort: switch the valve off when the page closes.
+window.addEventListener("beforeunload", () => { if (connected && writer) writer.write("v 0\r").catch(() => {}); });
+showVolt();
+</script>
+</body>
+</html>
