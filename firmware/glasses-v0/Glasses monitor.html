@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glasses Monitor</title>
+<style>
+  :root {
+    --bg: #14161a; --card: #1d1f23; --card2: #26292f; --line: #3a3e46;
+    --text: #f2f2f2; --muted: #a9adb4; --accent: #4c9aff; --warn: #ffb020; --bad: #ff6b6b; --good: #3ccf7a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, sans-serif; font-size: 16px; }
+  #bar { position: sticky; top: 0; z-index: 5; background: var(--card); border-bottom: 1px solid var(--line);
+    padding: 10px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  #bar h1 { font-size: 20px; margin: 0 8px 0 0; }
+  #conn { color: var(--muted); font-size: 15px; flex: 1; min-width: 200px; }
+  #conn.good { color: var(--good); }
+  main { max-width: 1000px; margin: 0 auto; padding: 16px; display: grid; gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 8px; color: var(--muted); text-transform: none; }
+  .wide { grid-column: 1 / -1; }
+  .big { font-size: 46px; font-weight: 700; line-height: 1.05; }
+  .unit { font-size: 16px; color: var(--muted); font-weight: 400; margin-left: 4px; }
+  .row { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+  .pill { display: inline-block; padding: 2px 12px; border-radius: 999px; font-weight: 600; font-size: 15px;
+    background: var(--card2); border: 1px solid var(--line); }
+  .pill.auto { color: var(--good); border-color: var(--good); }
+  .pill.manual { color: var(--warn); border-color: var(--warn); }
+  .meter { position: relative; height: 16px; background: #0d0e10; border-radius: 8px; margin: 10px 0 4px; overflow: hidden; }
+  .meter > i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); width: 0; }
+  .meter > b { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--warn); }
+  .scale { position: relative; height: 34px; font-size: 12px; color: var(--muted); }
+  .scale span { position: absolute; top: 0; transform: translateX(-50%); text-align: center; white-space: nowrap; line-height: 1.25; }
+  .note { color: var(--muted); font-size: 14px; }
+  .pads { display: flex; gap: 16px; }
+  .pad { flex: 1; text-align: center; border: 2px solid var(--line); border-radius: 12px; padding: 12px 6px; }
+  .pad.on { border-color: var(--accent); background: #12263f; }
+  .pad .name { font-weight: 600; }
+  .pad .raw { font: 13px Consolas, monospace; color: var(--muted); margin-top: 4px; }
+  button { font: inherit; font-size: 15px; padding: 8px 14px; border-radius: 6px; border: 1px solid #50545c;
+    background: var(--card2); color: var(--text); cursor: pointer; }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:disabled { opacity: .45; cursor: default; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #05101f; font-weight: 600; }
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  input[type=number] { width: 110px; font: inherit; background: #0d0e10; color: var(--text);
+    border: 1px solid #50545c; border-radius: 6px; padding: 6px 8px; }
+  label { display: block; margin: 6px 0; }
+  textarea { width: 100%; height: 56px; background: #0d0e10; color: #cfd3d8; border: 1px solid #50545c;
+    border-radius: 6px; font: 13px Consolas, monospace; }
+  #msg { grid-column: 1 / -1; display: none; border-left: 4px solid var(--warn); background: #2b2412; padding: 10px 14px; border-radius: 6px; white-space: pre-wrap; }
+  #warn { grid-column: 1 / -1; display: none; border-left: 4px solid var(--bad); background: #2c1a1a; padding: 10px 14px; border-radius: 6px; white-space: pre-wrap; }
+  #msg.bad { border-color: var(--bad); background: #2c1a1a; font-family: Consolas, monospace; font-size: 13px; }
+  #log { font: 12px/1.35 Consolas, monospace; color: #cfd3d8; background: #0d0e10; height: 160px; overflow-y: auto;
+    white-space: pre-wrap; padding: 8px; border-radius: 6px; margin-top: 8px; }
+  details summary { cursor: pointer; color: var(--muted); }
+  .stale .big, .stale .pad, .stale .meter { opacity: .35; }
+</style>
+</head>
+<body>
+<div id="bar">
+  <h1>Glasses monitor</h1>
+  <button class="primary" id="btnConnect">Connect to board</button>
+  <div id="conn">Plug in the QT Py, then press Connect and pick the board in the pop-up (it may be called "USB Serial Device").</div>
+</div>
+
+<main id="main" class="stale">
+  <div id="msg"></div>
+  <div id="warn"></div>
+
+  <div class="card">
+    <h2>Shade</h2>
+    <div class="row"><span class="big" id="shade">--</span><span class="unit">of full shade</span></div>
+    <div class="meter"><i id="shadeBar"></i></div>
+    <div class="row"><span class="pill" id="mode">--</span>
+      <span class="note">Valve power: <b id="volts">--</b></span></div>
+  </div>
+
+  <div class="card">
+    <h2>Light on the sensor</h2>
+    <div class="row"><span class="big" id="lux">--</span><span class="unit">lux</span></div>
+    <div class="meter"><i id="luxBar"></i><b id="mClear"></b><b id="mDark"></b></div>
+    <div class="scale" id="scale"></div>
+    <div class="note" id="sensor">Lux is a measure of how bright the light is. The orange lines are where the glasses start to darken and where they reach full shade.</div>
+  </div>
+
+  <div class="card">
+    <h2>Touch pads</h2>
+    <div class="pads" id="pads">
+      <div class="pad" id="pad0"><div class="name">Darker</div><div class="note">wire on A0</div><div class="raw" id="raw0">--</div></div>
+      <div class="pad" id="pad1"><div class="name">Clearer</div><div class="note">wire on A1</div><div class="raw" id="raw1">--</div></div>
+    </div>
+    <div class="note" style="margin-top:8px">Hold one pad to change the shade (that switches to manual). Hold both for 1 second to switch between automatic and manual: one blink means manual, two blinks mean automatic. The numbers are the pad's reading and the reading needed to count as a touch.</div>
+  </div>
+
+  <div class="card">
+    <h2>Control from here</h2>
+    <div class="btns">
+      <button id="btnAuto" disabled>Automatic mode</button>
+      <button id="btnClear" disabled>Clear</button>
+      <button id="btnFull" disabled>Full shade</button>
+    </div>
+    <label>Manual shade: <b id="manualVal">--</b>
+      <input type="range" id="manual" min="0" max="100" value="0" disabled></label>
+    <div class="note">Moving the slider switches the glasses to manual mode.</div>
+  </div>
+
+  <div class="card">
+    <h2>Tune automatic mode</h2>
+    <label>Stay clear up to <input type="number" id="clearLux" value="2500" min="0" max="200000" step="100"> lux</label>
+    <label>Full shade from <input type="number" id="darkLux" value="30000" min="0" max="200000" step="1000"> lux</label>
+    <div class="btns"><button id="btnTry" disabled>Try these now</button></div>
+    <div class="note" id="tryMsg" style="color:var(--warn)"></div>
+    <div class="note">The board forgets "try these" when it restarts. To keep the numbers, paste these two lines over the matching lines in config.py on the board:</div>
+    <textarea id="cfgText" readonly></textarea>
+    <div class="btns"><button id="btnCopy">Copy the two lines</button></div>
+  </div>
+
+  <div class="card">
+    <h2>Board</h2>
+    <div class="row"><span class="note">Free memory: <b id="free">--</b></span></div>
+    <div class="btns"><button id="btnRestart" disabled>Restart the board</button></div>
+    <div class="note">Restart shows the program's start-up messages in the log below, and is the first thing to try if nothing answers.</div>
+    <details><summary>Log of what the board says</summary><div id="log"></div></details>
+  </div>
+</main>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const ADAFRUIT_USB_VENDOR = 0x239A;
+const STATUS = /^S (\w+) lux=(-?\d+) shade=([\d.]+) volts=([\d.]+) pads=(\d)(\d) raw=(\d+)\/(\d+),(\d+)\/(\d+) sensor=(\w+)(?: free=(\d+))?(?: lo=(\d+) hi=(\d+))?(?: fault=(\d))?/;
+const LUX_MAX = 140000;
+
+let port = null, reader = null, writer = null, connected = false;
+let lineBuf = "", lastStatus = 0, lastErr = "", dragging = false, sendTimer = null, pendingManual = null;
+let boardMsg = false, collecting = true, edited = false, resent = false, boardLo = 0, boardHi = 0;
+
+function setConn(text, good) { $("conn").textContent = text; $("conn").classList.toggle("good", !!good); }
+function showMsg(text, bad) {
+  const m = $("msg");
+  m.style.display = text ? "block" : "none";
+  m.textContent = text || "";
+  m.classList.toggle("bad", !!bad);
+}
+function showWarn(text) {
+  $("warn").style.display = text ? "block" : "none";
+  $("warn").textContent = text || "";
+}
+function logText(s) {
+  const el = $("log");
+  const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
+  el.textContent = (el.textContent + s).slice(-40000);
+  if (atBottom) el.scrollTop = el.scrollHeight;
+}
+function luxPos(lux) { return Math.max(0, Math.min(1, Math.log10(Math.max(lux, 1)) / Math.log10(LUX_MAX))) * 100; }
+
+function drawScale() {
+  // Ticks on the same log scale as the bar: lux and what that light is like.
+  const ticks = [[10, "10", "dim room"], [100, "100", ""], [1000, "1k", "overcast"], [10000, "10k", "shade"], [100000, "100k", "full sun"]];
+  $("scale").innerHTML = "";
+  for (const [lux, num, what] of ticks) {
+    const sp = document.createElement("span");
+    sp.style.left = Math.min(Math.max(luxPos(lux), 6), 97) + "%";
+    sp.textContent = num;
+    if (what) sp.appendChild(document.createElement("br")), sp.appendChild(document.createTextNode(what));
+    $("scale").appendChild(sp);
+  }
+}
+
+function drawMarkers() {
+  // The orange lines show what the board is using (from its state line); before that, the typed numbers.
+  const c = parseFloat($("clearLux").value), d = parseFloat($("darkLux").value);
+  const lo = boardLo || c, hi = boardHi || d;
+  if (lo > 0) $("mClear").style.left = luxPos(lo) + "%";
+  if (hi > 0) $("mDark").style.left = luxPos(hi) + "%";
+  $("cfgText").value = "CLEAR_LUX = " + (c > 0 ? c : "?") + "\nDARK_LUX = " + (d > 0 ? d : "?");
+}
+
+function onStatus(m) {
+  lastStatus = performance.now();
+  $("main").classList.remove("stale");
+  if (boardMsg) { showMsg(""); boardMsg = false; }
+  resent = false;
+  const auto = m[1] === "auto";
+  const shade = parseFloat(m[3]);
+  $("mode").textContent = auto ? "Automatic" : "Manual";
+  $("mode").className = "pill " + (auto ? "auto" : "manual");
+  $("shade").textContent = Math.round(shade * 100) + "%";
+  $("shadeBar").style.width = (shade * 100) + "%";
+  $("volts").textContent = parseFloat(m[4]) < 0.05 ? "off" : m[4] + " V";
+  $("lux").textContent = m[11] === "ok" ? Number(m[2]).toLocaleString() : "--";
+  $("luxBar").style.width = (m[11] === "ok" ? luxPos(Number(m[2])) : 0) + "%";
+  $("sensor").textContent = m[11] === "ok"
+    ? "Lux is a measure of how bright the light is. The orange lines are where the glasses start to darken and where they reach full shade."
+    : "The light sensor is not answering, so automatic mode keeps the glasses clear. Check the cable in the STEMMA QT port. Touch pads still work.";
+  for (const i of [0, 1]) {
+    $("pad" + i).classList.toggle("on", m[5 + i] === "1");
+    $("raw" + i).textContent = m[7 + 2 * i] + " / " + m[8 + 2 * i];
+  }
+  if (m[12] !== undefined) $("free").textContent = Number(m[12]).toLocaleString() + " bytes";
+  if (m[13] !== undefined) {
+    boardLo = Number(m[13]); boardHi = Number(m[14]);
+    if (!edited) { $("clearLux").value = boardLo; $("darkLux").value = boardHi; }
+    drawMarkers();
+  }
+  if (m[15] === "1") {
+    showWarn("The program caught a fault and set the glasses clear. Check config.py for a typo (only numbers after the = signs), then press Restart the board.");
+  }
+  if (!dragging) {
+    $("manual").value = Math.round(shade * 100);
+    $("manualVal").textContent = Math.round(shade * 100) + "%";
+  }
+}
+
+function onLine(l) {
+  const m = STATUS.exec(l);
+  if (m) { onStatus(m); return; }
+  logText(l + "\n");
+  if (/soft reboot|code\.py output|^Glasses:/.test(l)) collecting = true;
+  if (/^Glasses:/.test(l)) { send("mon 1\r"); }   // the board restarted by itself (config.py saved): ask again
+  if (/^(FAULT|console error)/.test(l)) {
+    showWarn("The board reported a problem: " + l + "\nThe glasses go clear while this is wrong. Check config.py for a typo (only numbers after the = signs), then press Restart the board.");
+  }
+  if (collecting && /Traceback|^\s+File "|Error:|FAULT|MemoryError/.test(l)) lastErr = (lastErr + l + "\n").slice(-1500);
+}
+
+async function readLoop() {
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      lineBuf += value.replace(/\r/g, "");
+      let i;
+      while ((i = lineBuf.indexOf("\n")) >= 0) {
+        onLine(lineBuf.slice(0, i));
+        lineBuf = lineBuf.slice(i + 1);
+      }
+    }
+  } catch (e) { /* port closed or unplugged */ }
+  connected = false;
+  for (const id of ["btnAuto", "btnClear", "btnFull", "manual", "btnTry", "btnRestart"]) $(id).disabled = true;
+  $("btnConnect").disabled = false;
+  $("btnConnect").textContent = "Connect to board";
+  $("main").classList.add("stale");
+  setConn("The board disconnected. Plug it back in, then press Connect.");
+}
+
+async function send(s) {
+  if (!connected) return;
+  try { await writer.write(s); } catch (e) { /* disconnected: readLoop reports it */ }
+}
+
+async function connect(useFilter) {
+  showMsg("");
+  if (!("serial" in navigator)) {
+    showMsg("This browser can't talk to the board. Close this tab, then right-click the file > Open with > Google Chrome (or Microsoft Edge).");
+    return;
+  }
+  try {
+    port = await navigator.serial.requestPort(useFilter ? { filters: [{ usbVendorId: ADAFRUIT_USB_VENDOR }] } : {});
+    await port.open({ baudRate: 115200 });
+  } catch (e) {
+    if (e.name === "NotFoundError") return;   // pop-up closed without picking
+    showMsg("Could not open the board: " + e.message +
+      "\nIf another program (Thonny, Mu, a serial monitor, or a bench test page) has it open, close it. Or unplug the board, plug it back in, press F5, and connect again.");
+    return;
+  }
+  const dec = new TextDecoderStream();
+  port.readable.pipeTo(dec.writable).catch(() => {});
+  reader = dec.readable.getReader();
+  const enc = new TextEncoderStream();
+  enc.readable.pipeTo(port.writable).catch(() => {});
+  writer = enc.writable.getWriter();
+  connected = true;
+  lastErr = ""; lastStatus = 0; collecting = true; resent = false; showWarn("");
+  readLoop();
+  $("btnConnect").textContent = "Connected";
+  $("btnConnect").disabled = true;
+  for (const id of ["btnAuto", "btnClear", "btnFull", "manual", "btnTry", "btnRestart"]) $(id).disabled = false;
+  setConn("Connected. Waiting for the glasses program...", true);
+  // Never interrupt the program: just ask it to start sending its state.
+  await send("mon 1\r");
+  setTimeout(checkAnswer, 3000);
+}
+
+function checkAnswer() {
+  if (!connected || lastStatus) return;
+  if (lastErr) {
+    boardMsg = true;
+    showMsg("The board reported an error:\n" + lastErr + "\nThe glasses stay clear while this is wrong. If you just edited config.py, check it for a typo (only numbers after the = signs). Press \"Restart the board\" to try again.", true);
+  } else {
+    boardMsg = true;
+    showMsg("The board is connected but the glasses program is not answering. Press \"Restart the board\" and watch the log below for its start-up messages. If it says nothing, check that code.py from the glasses folder is on the board.");
+  }
+}
+
+setInterval(() => {
+  if (!connected) return;
+  if (lastStatus && performance.now() - lastStatus > 2500) {
+    $("main").classList.add("stale");
+    if (!resent && performance.now() - lastStatus > 5000) { resent = true; send("mon 1\r"); }
+    setConn("Connected, but no update for a few seconds. Press Restart the board if it stays like this.", false);
+  } else if (lastStatus) {
+    setConn("Connected. Updating twice a second.", true);
+  }
+}, 1000);
+
+async function restart() {
+  lastStatus = 0; lastErr = ""; showMsg(""); showWarn(""); collecting = false;
+  $("main").classList.add("stale");
+  setConn("Restarting the board...", true);
+  await send("\x03");
+  await new Promise(r => setTimeout(r, 400));
+  await send("\x04");
+  await new Promise(r => setTimeout(r, 4000));   // the program takes a few seconds to start
+  await send("mon 1\r");
+  setTimeout(checkAnswer, 3000);
+}
+
+function sendManual(v) {
+  pendingManual = v;
+  if (sendTimer) return;
+  sendTimer = setTimeout(() => {
+    sendTimer = null;
+    if (pendingManual !== null) { send("m " + (pendingManual / 100).toFixed(2) + "\r"); pendingManual = null; }
+  }, 120);
+}
+
+$("btnConnect").onclick = () => connect(true);
+$("btnAuto").onclick = () => send("auto\r");
+$("btnClear").onclick = () => { $("manual").value = 0; $("manualVal").textContent = "0%"; send("m 0\r"); };
+$("btnFull").onclick = () => { $("manual").value = 100; $("manualVal").textContent = "100%"; send("m 1\r"); };
+$("manual").oninput = e => { dragging = true; $("manualVal").textContent = e.target.value + "%"; sendManual(+e.target.value); };
+$("manual").onchange = () => { setTimeout(() => { dragging = false; }, 400); };
+$("btnRestart").onclick = restart;
+$("btnTry").onclick = () => {
+  const c = parseFloat($("clearLux").value), d = parseFloat($("darkLux").value);
+  if (!(c >= 1 && d > c && d < 1e7)) { $("tryMsg").textContent = "\"Full shade from\" must be a bigger number than \"Stay clear up to\", and both at least 1."; return; }
+  $("tryMsg").textContent = "";
+  send("lux " + c + " " + d + "\r");
+};
+$("btnCopy").onclick = async () => {
+  const t = $("cfgText");
+  try { await navigator.clipboard.writeText(t.value); }
+  catch (e) { t.select(); document.execCommand("copy"); }
+  $("btnCopy").textContent = "Copied";
+  setTimeout(() => { $("btnCopy").textContent = "Copy the two lines"; }, 1500);
+};
+$("clearLux").oninput = $("darkLux").oninput = () => { edited = true; $("tryMsg").textContent = ""; drawMarkers(); };
+window.addEventListener("beforeunload", () => { if (connected && writer) writer.write("mon 0\r").catch(() => {}); });
+drawScale();
+drawMarkers();
+</script>
+</body>
+</html>
