@@ -73,4 +73,17 @@ everything (including the sensor commands) needed about 31 KB to compile, so the
 split in two and has no sensor code. In a model of the board's memory, it needs about 12 KB
 free, against about 20 KB for bench test 1 with the sensor library.
 
-This code has been checked on a simulated board, not on real hardware yet.
+## Results
+
+First real run, 2026-10-20 (eye check, valve with one film peeled, white monitor, board at its 3.2 V limit):
+
+- The program ran on the real QT Py and the valve changed with the slider. No flicker, no color tint.
+- Screen mode was not found by eye. At the highest setting (3.20 V; the board's own estimate was
+  3.11 V at 94.6 Hz) one angle was still clearly darker.
+- As power rose, the darkest angle stayed at the same angle (about an eighth of a turn) and the
+  other angles got darker.
+- Limit of this test: Adafruit's page for the large light valve says it starts darkening at about
+  1 V, is nearly opaque at about 4 V, and 5 V is the maximum recommended (AC square wave). The QT Py
+  cannot give more than 3.3 V, so the upper part of the range was not tested.
+
+The firmware was checked on a simulated board before the first real run above.
