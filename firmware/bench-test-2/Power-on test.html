@@ -58,6 +58,9 @@
   .hidden { display: none !important; }
   kbd { background: #33363c; border-radius: 4px; padding: 1px 6px; font-size: 14px; }
   .btnrow { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+  /* Stays at the bottom of the setup page so Connect and Start are never hidden below the fold. */
+  #setupBar { position: sticky; bottom: -40px; margin: 16px -32px -40px; padding: 4px 32px 12px; background: var(--bar);
+    border-top: 1px solid #50545c; max-height: 50%; overflow-y: auto; }
   .q { margin: 10px 0; font-size: 16px; }
   .q label { margin-right: 18px; white-space: nowrap; }
   #helpBox { position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); max-width: 640px; width: calc(100% - 48px);
@@ -70,7 +73,7 @@
   <div id="topText">
     <div id="stepline">Test 2: the light valve with power on</div>
     <div id="msg">Wire the valve first, then connect</div>
-    <div id="sub">Follow "1. Wire the valve" below with the USB cable unplugged. Then plug it in and press "Connect to board". In the pop-up, click the board (it may be called "USB Serial Device"), then Connect.</div>
+    <div id="sub">Follow "1. Wire the valve" below with the USB cable unplugged. Then plug it in and press the blue "1. Connect to board" button at the bottom of this page. In the pop-up, click the board (it may be called "USB Serial Device"), then Connect. After that, press "2. Start the eye check".</div>
     <div id="why"></div>
   </div>
   <div id="voltWrap"><div id="volt">off</div><div id="voltLabel">power to the valve</div></div>
@@ -168,11 +171,13 @@
       </div>
     </div>
 
-    <div id="setupErr"></div>
-    <div class="btnrow">
-      <button class="primary" id="btnConnect">Connect to board</button>
-      <button id="btnConnectAll">Board not in the pop-up? Try this</button>
-      <button class="primary" id="btnStart" disabled>Start the eye check</button>
+    <div id="setupBar">
+      <div id="setupErr"></div>
+      <div class="btnrow">
+        <button class="primary" id="btnConnect">1. Connect to board</button>
+        <button class="primary" id="btnStart" disabled>2. Start the eye check</button>
+        <button id="btnConnectAll">Board not in the pop-up? Try this</button>
+      </div>
     </div>
   </div>
 
